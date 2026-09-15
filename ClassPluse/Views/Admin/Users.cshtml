@@ -13,7 +13,7 @@
     </a>
 </div>
 
-<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
+<div class="card border border-light-subtle rounded-1 overflow-hidden mb-5">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -55,12 +55,14 @@
                                 @(user.Department ?? "-")
                             </td>
                             <td class="pe-4 py-3 text-end">
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Edit (Not implemented)">
+                                <a asp-action="EditUser" asp-route-id="@user.Id" class="btn btn-sm btn-outline-secondary rounded-circle" title="Edit">
                                     <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger rounded-circle ms-1" title="Delete (Not implemented)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                </a>
+                                <form asp-action="DeleteUser" asp-route-id="@user.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this user?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle ms-1" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     }

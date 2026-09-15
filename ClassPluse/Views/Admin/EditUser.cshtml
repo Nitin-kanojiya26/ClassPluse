@@ -1,0 +1,56 @@
+@model ClassPluse.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                        <i class="bi bi-person-gear fs-2 text-dark"></i>
+                    </div>
+                    <h3 class="fw-bold">Edit User</h3>
+                    <p class="text-muted">Update user details.</p>
+                </div>
+
+                <form asp-action="EditUser" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="FullName" class="form-control rounded-3" placeholder="Full Name" />
+                        <label asp-for="FullName">Full Name</label>
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="Department" class="form-control rounded-3" placeholder="Department" />
+                        <label asp-for="Department">Department</label>
+                        <span asp-validation-for="Department" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <input asp-for="RollNumber" class="form-control rounded-3" placeholder="Id No (Students Only)" />
+                        <label asp-for="RollNumber">Id No (Students Only)</label>
+                        <span asp-validation-for="RollNumber" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-dark btn-lg rounded-pill fw-medium transition-hover">
+                            Save Changes
+                        </button>
+                        <a asp-action="Users" class="btn btn-light btn-lg rounded-pill text-dark fw-medium mt-2">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

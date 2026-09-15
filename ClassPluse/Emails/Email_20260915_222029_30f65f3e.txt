@@ -1,0 +1,15 @@
+--- EMAIL MESSAGE ---
+To: kanojiyanitin870@gmail.com
+Subject: Welcome to ClassPluse - Your Login Credentials
+Date: 15-09-2026 22:20:29
+
+Body:
+Hello Nitin,
+
+Your account has been created.
+
+Login Email: Nitin1@classpluse.com
+Password: Cp@BD0ECB!
+
+Please log in and change your password as soon as possible.
+---------------------

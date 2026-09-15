@@ -24,6 +24,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<ClassPluse.Services.CryptoService>();
 builder.Services.AddScoped<ClassPluse.Services.QrTokenService>();
+builder.Services.AddScoped<ClassPluse.Services.IEmailService, ClassPluse.Services.SmtpEmailService>();
 
 var app = builder.Build();
 

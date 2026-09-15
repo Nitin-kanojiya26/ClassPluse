@@ -21,81 +21,98 @@
     @if (ViewData["HideNavbar"] as bool? != true)
     {
         <header>
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom mb-0">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-mortarboard-fill text-primary me-2"></i>ClassPluse
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3 mb-4 sticky-top">
+            <div class="container">
+                <a class="navbar-brand fw-bold text-dark d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index" style="letter-spacing: -0.5px;">
+                    <div class="bg-dark text-white rounded px-2 py-1 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="bi bi-mortarboard-fill fs-6"></i>
+                    </div>
+                    ClassPluse
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav flex-grow-1 ms-lg-4">
                         @if (User.IsInRole("Admin"))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="Index">Dashboard</a>
+                            <li class="nav-item me-2">
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Admin" asp-action="Index">Dashboard</a>
+                            </li>
+                            <li class="nav-item me-2">
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Admin" asp-action="Users">Users</a>
+                            </li>
+                            <li class="nav-item me-2">
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Admin" asp-action="Courses">Courses</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="Users">Users</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="Courses">Courses</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="Enrollments">Enrollments</a>
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Admin" asp-action="Enrollments">Enrollments</a>
                             </li>
                         }
                         else if (User.IsInRole("Faculty"))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Faculty" asp-action="Index">Dashboard</a>
+                            <li class="nav-item me-2">
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Faculty" asp-action="Index">Dashboard</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Faculty" asp-action="Index">My Courses</a>
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Faculty" asp-action="Index">My Courses</a>
                             </li>
                         }
                         else if (User.IsInRole("Student"))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Student" asp-action="Dashboard">Dashboard</a>
+                            <li class="nav-item me-2">
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Student" asp-action="Dashboard">Dashboard</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Student" asp-action="Scan">Scan QR</a>
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Student" asp-action="Scan">Scan QR</a>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
                         }
                     </ul>
-                    <ul class="navbar-nav align-items-center">
+                    <ul class="navbar-nav align-items-center mt-3 mt-lg-0">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
                             string roleBadge = "Student";
-                            string roleClass = "bg-primary";
-                            if (User.IsInRole("Admin")) { roleBadge = "Admin"; roleClass = "bg-danger"; }
-                            if (User.IsInRole("Faculty")) { roleBadge = "Faculty"; roleClass = "bg-warning text-dark"; }
+                            string roleClass = "bg-light text-dark border";
+                            if (User.IsInRole("Admin")) { roleBadge = "Admin"; roleClass = "bg-dark text-white"; }
+                            if (User.IsInRole("Faculty")) { roleBadge = "Faculty"; roleClass = "bg-secondary text-white"; }
 
-                            <li class="nav-item d-flex align-items-center me-3">
-                                <span class="text-light fw-medium me-2">@User.Identity.Name</span>
-                                <span class="badge @roleClass rounded-pill">@roleBadge</span>
+                            <li class="nav-item dropdown d-flex align-items-center me-4 mb-3 mb-lg-0">
+                                <a href="#" class="nav-link dropdown-toggle d-flex align-items-center text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0;">
+                                    <div class="d-flex flex-column text-end me-2 d-none d-lg-block">
+                                        <span class="text-dark fw-semibold small" style="line-height: 1;">@User.Identity.Name</span>
+                                        <span class="text-secondary" style="font-size: 0.7rem;">@roleBadge</span>
+                                    </div>
+                                    <div class="d-lg-none me-3">
+                                        <span class="text-dark fw-semibold me-2">@User.Identity.Name</span>
+                                        <span class="badge @roleClass rounded-pill">@roleBadge</span>
+                                    </div>
+                                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center d-none d-lg-flex" style="width: 36px; height: 36px;">
+                                        <i class="bi bi-person text-secondary"></i>
+                                    </div>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-light-subtle rounded-1 mt-2">
+                                    <li><a class="dropdown-item small" asp-controller="Account" asp-action="ChangePassword"><i class="bi bi-key me-2 text-muted"></i>Change Password</a></li>
+                                </ul>
                             </li>
-                            <li class="nav-item">
-                                <form class="form-inline m-0" asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit" class="btn btn-outline-light btn-sm rounded-pill px-3">
-                                        <i class="bi bi-box-arrow-right me-1"></i> Logout
+                            <li class="nav-item w-100 w-lg-auto">
+                                <form class="form-inline m-0 w-100" asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="btn btn-outline-dark btn-sm rounded-1 px-4 py-2 w-100 transition-hover">
+                                        Logout
                                     </button>
                                 </form>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="btn btn-primary btn-sm rounded-pill px-4" asp-controller="Account" asp-action="Login">Login</a>
+                            <li class="nav-item w-100 w-lg-auto">
+                                <a class="btn btn-dark btn-sm rounded-1 px-4 py-2 w-100 transition-hover" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                         }
                     </ul>
@@ -104,17 +121,37 @@
         </nav>
     </header>
     }
-    <div class="container-fluid py-4">
+    
+    <div class="container py-4" style="min-height: calc(100vh - 180px);">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - ClassPluse - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top py-4 bg-white mt-auto">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div class="text-secondary small mb-2 mb-md-0">
+                &copy; 2026 - ClassPluse
+            </div>
+            <div>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-secondary small text-decoration-none transition-hover hover-text-dark">Privacy Policy</a>
+                <span class="text-secondary mx-2">·</span>
+                <a href="#" class="text-secondary small text-decoration-none transition-hover hover-text-dark">Terms of Service</a>
+            </div>
         </div>
     </footer>
+    
+    <style>
+        .hover-bg-light:hover { background-color: #f8f9fa; color: #212529 !important; }
+        .hover-text-dark:hover { color: #212529 !important; }
+        
+        /* Highlight active link based on current page */
+        .nav-link.active {
+            color: #212529 !important;
+            font-weight: 600 !important;
+            background-color: #f8f9fa;
+        }
+    </style>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

@@ -1,0 +1,62 @@
+@model ClassPluse.Models.Course
+@{
+    ViewData["Title"] = "Edit Course";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px;">
+                        <i class="bi bi-pencil fs-2 text-dark"></i>
+                    </div>
+                    <h3 class="fw-bold">Edit Course</h3>
+                    <p class="text-muted">Update course details.</p>
+                </div>
+
+                <form asp-action="EditCourse" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="CourseCode" class="form-control rounded-3" placeholder="Course Code" />
+                        <label asp-for="CourseCode">Course Code</label>
+                        <span asp-validation-for="CourseCode" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="CourseName" class="form-control rounded-3" placeholder="Course Name" />
+                        <label asp-for="CourseName">Course Name</label>
+                        <span asp-validation-for="CourseName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <select asp-for="FacultyId" class="form-select rounded-3">
+                            <option value="">-- Select Faculty --</option>
+                            @foreach(var faculty in ViewBag.FacultyList)
+                            {
+                                <option value="@faculty.Id">@faculty.FullName (@faculty.Email)</option>
+                            }
+                        </select>
+                        <label asp-for="FacultyId">Assigned Faculty</label>
+                        <span asp-validation-for="FacultyId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-dark btn-lg rounded-pill fw-medium transition-hover">
+                            Save Changes
+                        </button>
+                        <a asp-action="Courses" class="btn btn-light btn-lg rounded-pill text-dark fw-medium mt-2">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

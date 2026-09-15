@@ -1,219 +1,221 @@
 @{
-    ViewData["Title"] = "Student Dashboard";
+    ViewData["Title"] = "Dashboard";
     var dashboardData = ViewBag.DashboardData as IEnumerable<dynamic>;
     var recentActivity = ViewBag.RecentActivity as IEnumerable<ClassPluse.Models.AttendanceRecord>;
     bool hasLowAttendance = false;
 }
 
-<div class="row mb-5">
-    <!-- Student Info Column -->
-    <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold mb-0">Welcome, @ViewBag.UserFullName</h2>
-                <p class="text-muted mb-0">@ViewBag.UserRollNumber</p>
-            </div>
-            <a asp-action="Scan" class="btn btn-primary btn-lg shadow-sm rounded-pill px-4">
-                <i class="bi bi-qr-code-scan me-2"></i> Scan Attendance QR
+<div class="container-fluid px-0">
+    <!-- Header Section -->
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-light mb-1" style="letter-spacing: -0.5px;">Welcome, <span class="fw-bold">@ViewBag.UserFullName</span></h2>
+            <p class="text-secondary mb-0">Roll No: @ViewBag.UserRollNumber</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-4 mt-md-0">
+            <a asp-action="Scan" class="btn btn-dark px-4 py-2 rounded-1 transition-hover">
+                <i class="bi bi-qr-code-scan me-2"></i> Scan QR
             </a>
         </div>
+    </div>
 
-        @if(dashboardData != null)
+    @if(dashboardData != null)
+    {
+        foreach(var data in dashboardData)
         {
-            foreach(var data in dashboardData)
+            double percentage = data.Percentage;
+            if (percentage < 75 && data.TotalSessions > 0)
             {
-                double percentage = data.Percentage;
-                if (percentage < 75 && data.TotalSessions > 0)
-                {
-                    var course = data.Course as ClassPluse.Models.Course;
-                    <div class="alert alert-warning shadow-sm border-0 rounded-4" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i> 
-                        ⚠️ Your attendance in <strong>@course?.CourseName</strong> is @percentage% — below the 75% requirement.
+                var course = data.Course as ClassPluse.Models.Course;
+                <div class="alert alert-warning border-0 rounded-1 d-flex align-items-center mb-4" role="alert" style="background-color: #fff8e1; color: #856404;">
+                    <i class="bi bi-exclamation-triangle-fill fs-5 me-3"></i> 
+                    <div>
+                        <strong>Attention:</strong> Attendance in @course?.CourseName is @Math.Round(percentage, 1)%, which is below the 75% requirement.
                     </div>
-                    hasLowAttendance = true;
-                }
+                </div>
+                hasLowAttendance = true;
             }
         }
-    </div>
-</div>
+    }
 
-<div class="row">
-    <!-- Left Column: Courses and Recent Activity -->
-    <div class="col-lg-7">
-        <h4 class="fw-bold mb-3 mt-2">Enrolled Courses</h4>
-        <div class="row row-cols-1 row-cols-md-2 g-3 mb-5">
+    <div class="row g-5">
+        <!-- Main Content Column -->
+        <div class="col-lg-8">
+            
+            <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-2">
+                <h5 class="fw-semibold mb-0">Enrolled Courses</h5>
+            </div>
+
             @if(dashboardData != null && dashboardData.Any())
             {
-                foreach(var data in dashboardData)
-                {
-                    var course = data.Course as ClassPluse.Models.Course;
-                    var faculty = course?.Faculty;
-                    double percentage = data.Percentage;
-                    string colorClass = "success";
-                    
-                    if (percentage < 65)
+                <div class="row row-cols-1 g-4 mb-5">
+                    @foreach(var data in dashboardData)
                     {
-                        colorClass = "danger";
-                    }
-                    else if (percentage < 75)
-                    {
-                        colorClass = "warning";
-                    }
+                        var course = data.Course as ClassPluse.Models.Course;
+                        double percentage = data.Percentage;
+                        string progressColor = percentage >= 75 ? "bg-dark" : (percentage >= 65 ? "bg-warning" : "bg-danger");
 
-                    <div class="col">
-                        <div class="card h-100 shadow-sm border-0 rounded-4 transition-hover">
-                            <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                                <h6 class="text-muted mb-1"><i class="bi bi-tag me-1"></i> @course?.CourseCode</h6>
-                                <h5 class="card-title fw-bold mb-0 text-truncate" title="@course?.CourseName">@course?.CourseName</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="text-center my-3">
-                                    <h2 class="display-5 fw-bold text-@colorClass mb-0">@percentage%</h2>
-                                </div>
-                                <div class="progress rounded-pill mb-3" style="height: 10px; background-color: #f0f0f0;">
-                                    <div class="progress-bar bg-@colorClass" role="progressbar" style="width: @percentage%" aria-valuenow="@percentage" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                                <p class="text-muted small mb-1">
-                                    <i class="bi bi-check2-circle me-1"></i> @data.AttendedSessions / @data.TotalSessions lectures
-                                </p>
-                            </div>
-                            <div class="card-footer bg-transparent border-top-0 pb-4">
-                                <a asp-action="History" asp-route-courseId="@course?.Id" class="btn btn-outline-secondary w-100 rounded-pill">
-                                    <i class="bi bi-clock-history me-1"></i> View History
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="col-12 w-100">
-                    <div class="card border-0 shadow-sm rounded-4 text-center p-5 bg-light">
-                        <div class="card-body">
-                            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
-                            <h4 class="mt-3">No Courses Found</h4>
-                            <p class="text-muted mb-0">You are not enrolled in any courses yet.</p>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-
-        @if (recentActivity != null && recentActivity.Any())
-        {
-            <h4 class="fw-bold mb-3">Recent Activity</h4>
-            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
-                <div class="card-body p-0">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light text-muted small">
-                            <tr>
-                                <th class="ps-4 py-3">Date</th>
-                                <th class="py-3">Course</th>
-                                <th class="pe-4 py-3 text-end">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="border-top-0">
-                            @foreach(var record in recentActivity)
-                            {
-                                <tr>
-                                    <td class="ps-4 py-3">
-                                        <span class="fw-medium">@record.MarkedAt.ToLocalTime().ToString("MMM dd")</span>
-                                        <span class="text-muted small ms-2">@record.MarkedAt.ToLocalTime().ToString("hh:mm tt")</span>
-                                    </td>
-                                    <td class="py-3">
-                                        @record.LectureSession?.Course?.CourseName
-                                    </td>
-                                    <td class="pe-4 py-3 text-end">
-                                        @if(record.Status == ClassPluse.Models.AttendanceStatus.Present)
-                                        {
-                                            <span class="badge bg-success rounded-pill px-3 py-2">Present</span>
-                                        }
-                                        else if(record.Status == ClassPluse.Models.AttendanceStatus.Absent)
-                                        {
-                                            <span class="badge bg-danger rounded-pill px-3 py-2">Absent</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2">@record.Status</span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
-    </div>
-
-    <!-- Right Column: Overall Attendance -->
-    <div class="col-lg-5">
-        <h4 class="fw-bold mb-3 mt-2 mt-lg-0">Overall Attendance</h4>
-        <div class="card shadow-sm border-0 rounded-4 bg-white sticky-top" style="top: 20px; z-index: 1;">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-end mb-2">
-                    <span class="text-muted fw-medium">Target: 75%</span>
-                    <h3 class="fw-bold text-primary mb-0">@ViewBag.OverallAttendancePercentage%</h3>
-                </div>
-                
-                <div class="progress rounded-pill mb-4 shadow-sm" style="height: 16px; background-color: #f0f0f0;">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: @ViewBag.OverallAttendancePercentage%" aria-valuenow="@ViewBag.OverallAttendancePercentage" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-
-                <hr class="my-4 text-muted opacity-25">
-
-                <h5 class="fw-bold text-muted mb-3">Subjects Breakdown</h5>
-                <div class="accordion accordion-flush" id="attendanceAccordion">
-                    @{ int index = 0; }
-                    @if(dashboardData != null && dashboardData.Any())
-                    {
-                        foreach(var data in dashboardData)
-                        {
-                            var course = data.Course as ClassPluse.Models.Course;
-                            double percentage = data.Percentage;
-                            string colorClass = percentage >= 75 ? "success" : (percentage >= 65 ? "warning" : "danger");
-                            string collapseId = $"collapseCourse{index}";
-                            string headingId = $"headingCourse{index}";
-
-                            <div class="accordion-item border-0 mb-3 bg-transparent">
-                                <h2 class="accordion-header" id="@headingId">
-                                    <button class="accordion-button collapsed rounded-3 border border-secondary border-opacity-25 bg-light py-3 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId" style="box-shadow: none;">
-                                        <div class="d-flex justify-content-between w-100 align-items-center me-2">
-                                            <span class="fw-bold text-dark text-truncate" style="font-size: 0.95rem; max-width: 65%;">@course?.CourseName</span>
-                                            <span class="badge bg-@colorClass rounded-pill px-2 py-1">@percentage%</span>
+                        <div class="col">
+                            <div class="card border-0 rounded-0 bg-transparent">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center border border-light-subtle p-4 rounded-1 transition-hover bg-white">
+                                    <div class="mb-3 mb-md-0 flex-grow-1">
+                                        <div class="text-muted small mb-1 tracking-wider text-uppercase">@course?.CourseCode</div>
+                                        <h5 class="fw-bold mb-1">@course?.CourseName</h5>
+                                        <div class="text-secondary small">
+                                            <i class="bi bi-person me-1"></i> @course?.Faculty?.FullName
                                         </div>
-                                    </button>
-                                </h2>
-                                <div id="@collapseId" class="accordion-collapse collapse" aria-labelledby="@headingId" data-bs-parent="#attendanceAccordion">
-                                    <div class="accordion-body px-3 py-3 bg-white border border-top-0 rounded-bottom-3 border-secondary border-opacity-25 mt-n1">
-                                        <div class="d-flex justify-content-between text-muted mb-2 small fw-medium">
-                                            <span>Attended: @data.AttendedSessions / @data.TotalSessions</span>
-                                            <span>@percentage%</span>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center ms-md-4" style="min-width: 250px;">
+                                        <div class="flex-grow-1 me-4">
+                                            <div class="d-flex justify-content-between mb-1 small">
+                                                <span class="text-muted">@data.AttendedSessions / @data.TotalSessions</span>
+                                                <span class="fw-semibold">@Math.Round(percentage, 1)%</span>
+                                            </div>
+                                            <div class="progress rounded-0" style="height: 4px; background-color: #f1f3f5;">
+                                                <div class="progress-bar @progressColor" role="progressbar" style="width: @percentage%"></div>
+                                            </div>
                                         </div>
-                                        <div class="progress rounded-pill shadow-sm" style="height: 8px; background-color: #e9ecef;">
-                                            <div class="progress-bar bg-@colorClass" role="progressbar" style="width: @percentage%"></div>
-                                        </div>
+                                        <a asp-action="History" asp-route-courseId="@course?.Id" class="btn btn-outline-dark btn-sm rounded-1 px-3">
+                                            Details
+                                        </a>
                                     </div>
                                 </div>
                             </div>
-                            index++;
-                        }
+                        </div>
                     }
                 </div>
+            }
+            else
+            {
+                <div class="text-center py-5 border border-light-subtle rounded-1 bg-white mb-5">
+                    <i class="bi bi-journal-x text-secondary" style="font-size: 3rem;"></i>
+                    <p class="mt-3 text-secondary mb-0">No courses found.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Sidebar Column -->
+        <div class="col-lg-4">
+            
+            <div class="card border border-light-subtle rounded-1 bg-white border-0 shadow-none mb-5">
+                <div class="card-body p-4 text-center">
+                    <h6 class="fw-semibold text-secondary mb-4">Overall Attendance</h6>
+                    <div class="position-relative mx-auto mb-3" style="width: 160px; height: 160px;">
+                        <canvas id="overallAttendanceChart"></canvas>
+                        <div class="position-absolute top-50 start-50 translate-middle d-flex flex-column align-items-center">
+                            <h2 class="fw-bold mb-0 text-dark" style="letter-spacing: -1px;">@ViewBag.OverallAttendancePercentage%</h2>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <h5 class="fw-semibold mb-4 border-bottom pb-2">Recent Activity</h5>
+            
+            @if (recentActivity != null && recentActivity.Any())
+            {
+                <div class="card border border-light-subtle rounded-1 bg-white border-0 shadow-none">
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush rounded-1">
+                            @foreach(var record in recentActivity)
+                            {
+                                string statusDot = record.Status == ClassPluse.Models.AttendanceStatus.Present ? "text-success" : 
+                                                 (record.Status == ClassPluse.Models.AttendanceStatus.Absent ? "text-danger" : "text-warning");
+                                
+                                <li class="list-group-item px-4 py-3 d-flex justify-content-between align-items-center border-light-subtle">
+                                    <div>
+                                        <h6 class="mb-1 fw-medium" style="font-size: 0.95rem;">@record.LectureSession?.Course?.CourseName</h6>
+                                        <div class="text-secondary small">
+                                            <i class="bi bi-clock me-1"></i> @record.MarkedAt.ToLocalTime().ToString("MMM dd, hh:mm tt")
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-circle-fill @statusDot" style="font-size: 0.5rem; margin-right: 8px;"></i>
+                                        <span class="small fw-semibold text-secondary">@record.Status</span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5 border border-light-subtle rounded-1 bg-white">
+                    <p class="text-secondary small mb-0">No recent activity.</p>
+                </div>
+            }
         </div>
     </div>
 </div>
 
 <style>
+    body {
+        background-color: #fafafa;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .tracking-wider { letter-spacing: 0.05em; }
     .transition-hover {
-        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        transition: all 0.2s ease-in-out;
     }
     .transition-hover:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        transform: translateY(-2px);
+        border-color: #dee2e6 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
+    .border-light-subtle { border-color: #f1f3f5 !important; }
 </style>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('overallAttendanceChart');
+            if (ctx) {
+                const percentage = @ViewBag.OverallAttendancePercentage;
+                const remaining = 100 - percentage;
+                
+                new Chart(ctx.getContext('2d'), {
+                    type: 'polarArea',
+                    data: {
+                        labels: ['Attended', 'Missed'],
+                        datasets: [{
+                            data: [percentage, remaining],
+                            backgroundColor: [
+                                'rgba(71, 85, 105, 0.7)',   // slate-600
+                                'rgba(148, 163, 184, 0.7)'  // slate-400
+                            ],
+                            borderColor: '#ffffff',
+                            borderWidth: 1.5,
+                            hoverBackgroundColor: 'rgba(51, 65, 85, 0.9)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                ticks: { display: false, backdropColor: 'transparent' },
+                                grid: { 
+                                    color: [
+                                        'rgba(0, 0, 0, 0.15)', 
+                                        'rgba(0, 0, 0, 0.08)', 
+                                        'rgba(0, 0, 0, 0.04)', 
+                                        'rgba(0, 0, 0, 0.01)', 
+                                        'rgba(0, 0, 0, 0)' 
+                                    ] 
+                                },
+                                angleLines: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: true }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
 
 

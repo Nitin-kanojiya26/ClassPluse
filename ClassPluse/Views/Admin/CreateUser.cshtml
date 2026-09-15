@@ -2,49 +2,71 @@
     ViewData["Title"] = "Create User";
 }
 
-<div class="container mt-4">
-    <h2>Create New User</h2>
-    <hr />
-    <div class="row">
-        <div class="col-md-6">
+<div class="row justify-content-center" style="margin-top: 3rem; margin-bottom: 5rem;">
+    <div class="col-md-6 col-lg-5">
+        <div class="mb-4">
+            <h2 class="fw-bold mb-1">Create New User</h2>
+            <p class="text-muted">Fill out the details to register a new user in the system. Login credentials will be automatically generated and emailed to their personal address.</p>
+        </div>
+
+        <div class="card border border-light-subtle rounded-1 bg-white shadow-sm p-4 p-md-5">
             <form asp-action="CreateUser" method="post">
-                <div asp-validation-summary="All" class="text-danger"></div>
+                <div asp-validation-summary="All" class="text-danger mb-3 small"></div>
+                
                 <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input name="fullName" class="form-control" required />
+                    <label class="form-label text-muted small fw-medium">Full Name</label>
+                    <input name="fullName" class="form-control rounded-1 bg-light border-light-subtle" required />
                 </div>
+                
                 <div class="mb-3">
-                    <label class="form-label">Email Address</label>
-                    <input name="email" type="email" class="form-control" required />
+                    <label class="form-label text-muted small fw-medium">System Login Email (@@classpluse.com)</label>
+                    <input name="email" type="email" class="form-control rounded-1 bg-light border-light-subtle" required placeholder="name@classpluse.com" />
                 </div>
+
                 <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input name="password" type="password" class="form-control" required />
+                    <label class="form-label text-muted small fw-medium">Personal Email (e.g., @@gmail.com)</label>
+                    <input name="personalEmail" type="email" class="form-control rounded-1 bg-light border-light-subtle" required placeholder="student@gmail.com" />
+                    <div class="form-text small mt-1">We will send their auto-generated password here.</div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Role</label>
-                    <select name="role" id="roleSelect" class="form-select" required onchange="toggleStudentFields()">
-                        <option value="Faculty">Faculty</option>
+                
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-medium">Role</label>
+                    <select name="role" id="roleSelect" class="form-select rounded-1 bg-light border-light-subtle" required onchange="toggleStudentFields()">
                         <option value="Student">Student</option>
+                        <option value="Faculty">Faculty</option>
                         <option value="Admin">Admin</option>
                     </select>
                 </div>
-                <div id="studentFields" style="display:none;">
+                
+                <div id="studentFields" class="p-3 bg-light rounded-1 border border-light-subtle mb-4">
+                    <h6 class="fw-medium text-dark mb-3">Student Details</h6>
                     <div class="mb-3">
-                        <label class="form-label">Roll Number</label>
-                        <input name="rollNumber" class="form-control" />
+                        <label class="form-label text-muted small fw-medium">Id</label>
+                        <input name="rollNumber" class="form-control rounded-1 border-light-subtle" />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Department</label>
-                        <input name="department" class="form-control" />
+                    <div class="mb-2">
+                        <label class="form-label text-muted small fw-medium">Department</label>
+                        <input name="department" class="form-control rounded-1 border-light-subtle" />
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Create User</button>
-                <a asp-action="Users" class="btn btn-secondary">Cancel</a>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Users" class="btn btn-light rounded-pill px-4 text-dark border-light-subtle">Cancel</a>
+                    <button type="submit" class="btn btn-dark rounded-pill px-4 fw-medium">Create User</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    /* Elegant input focus styling */
+    .form-control:focus, .form-select:focus {
+        border-color: #212529;
+        box-shadow: 0 0 0 0.15rem rgba(33, 37, 41, 0.1);
+        background-color: #ffffff !important;
+    }
+</style>
 
 @section Scripts {
     <script>

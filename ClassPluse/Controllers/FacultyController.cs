@@ -276,7 +276,7 @@ namespace ClassPluse.Controllers
 
             // Header Row
             worksheet.Cell(1, 1).Value = "Student Name";
-            worksheet.Cell(1, 2).Value = "Roll Number";
+            worksheet.Cell(1, 2).Value = "Id No";
             worksheet.Cell(1, 3).Value = "Attendance %";
 
             for (int i = 0; i < sessions.Count; i++)

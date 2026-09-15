@@ -14,5 +14,9 @@ namespace ClassPluse.Models
 
         [StringLength(100)]
         public string? Department { get; set; }
+
+        [StringLength(100)]
+        [EmailAddress]
+        public string? PersonalEmail { get; set; }
     }
 }

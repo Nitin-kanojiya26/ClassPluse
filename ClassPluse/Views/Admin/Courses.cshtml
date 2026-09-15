@@ -13,7 +13,7 @@
     </a>
 </div>
 
-<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
+<div class="card border border-light-subtle rounded-1 overflow-hidden mb-5">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -51,9 +51,9 @@
                                 }
                             </td>
                             <td class="pe-4 py-3 text-end">
-                                <button class="btn btn-sm btn-outline-secondary rounded-circle" title="Edit (Not implemented)">
+                                <a asp-action="EditCourse" asp-route-id="@course.Id" class="btn btn-sm btn-outline-secondary rounded-circle" title="Edit">
                                     <i class="bi bi-pencil"></i>
-                                </button>
+                                </a>
                                 <button class="btn btn-sm btn-outline-danger rounded-circle ms-1" title="Delete (Not implemented)">
                                     <i class="bi bi-trash"></i>
                                 </button>

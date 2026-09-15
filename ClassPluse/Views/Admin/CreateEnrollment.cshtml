@@ -4,15 +4,18 @@
     var students = ViewBag.Students as IEnumerable<ClassPluse.Models.ApplicationUser>;
 }
 
-<div class="container mt-4">
-    <h2>Enroll Student in Course</h2>
-    <hr />
-    <div class="row">
-        <div class="col-md-6">
+<div class="row justify-content-center" style="margin-top: 3rem; margin-bottom: 5rem;">
+    <div class="col-md-6 col-lg-5">
+        <div class="mb-4">
+            <h2 class="fw-bold mb-1">Enroll Student</h2>
+            <p class="text-muted">Select a course and find a student to enroll them into the session.</p>
+        </div>
+
+        <div class="card border border-light-subtle rounded-1 bg-white shadow-sm p-4 p-md-5">
             <form asp-action="CreateEnrollment" method="post">
-                <div class="mb-3">
-                    <label class="form-label">Course</label>
-                    <select name="courseId" class="form-select" required>
+                <div class="mb-5">
+                    <label class="form-label text-muted small fw-medium">Course</label>
+                    <select name="courseId" class="form-select rounded-1 bg-light border-light-subtle" required>
                         <option value="">-- Select Course --</option>
                         @if(courses != null)
                         {
@@ -23,22 +26,121 @@
                         }
                     </select>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Student</label>
-                    <select name="studentId" class="form-select" required>
-                        <option value="">-- Select Student --</option>
-                        @if(students != null)
-                        {
-                            foreach(var s in students)
+                
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-medium">Student</label>
+                    
+                    <div class="position-relative">
+                        <input type="text" id="studentSearch" class="form-control border-0 border-bottom rounded-0 px-0 shadow-none bg-transparent" placeholder="Search by Name or ID..." onkeyup="filterStudents()" onfocus="showDropdown()" style="border-bottom-color: #dee2e6 !important;" autocomplete="off" required />
+                        
+                        <!-- Hidden input for actual submission -->
+                        <input type="hidden" name="studentId" id="studentIdHidden" required />
+                        
+                        <!-- Minimalist Autocomplete Dropdown -->
+                        <ul id="studentDropdown" class="list-group position-absolute w-100 shadow rounded-1 border border-light-subtle bg-white" style="display:none; max-height: 250px; overflow-y: auto; z-index: 1000; top: 100%; margin-top: 5px;">
+                            @if(students != null)
                             {
-                                <option value="@s.Id">@s.FullName (@(s.RollNumber ?? s.Email))</option>
+                                foreach(var s in students)
+                                {
+                                    <li class="list-group-item list-group-item-action border-0 py-2 border-bottom" style="cursor:pointer;" onclick="selectStudent('@s.Id', '@(s.FullName.Replace("'", "\\'")) - @(s.RollNumber ?? s.Email)')">
+                                        <div class="fw-medium text-dark">@s.FullName</div>
+                                        <small class="text-muted">Id: @(s.RollNumber ?? s.Email)</small>
+                                    </li>
+                                }
                             }
-                        }
-                    </select>
+                            <li id="noResultsItem" class="list-group-item border-0 py-3 text-center text-muted small" style="display:none;">
+                                No matching students found.
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Enroll Student</button>
-                <a asp-action="Enrollments" class="btn btn-secondary">Cancel</a>
+                
+                <div class="d-flex justify-content-between mt-5">
+                    <a asp-action="Enrollments" class="btn btn-light rounded-pill px-4 text-dark border-light-subtle">Cancel</a>
+                    <button type="submit" class="btn btn-dark rounded-pill px-4 fw-medium">Enroll Student</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    .form-control:focus, .form-select:focus {
+        border-color: #212529;
+        box-shadow: 0 0 0 0.15rem rgba(33, 37, 41, 0.1);
+        background-color: #ffffff !important;
+    }
+    
+    /* Scrollbar styling for the dropdown */
+    #studentDropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+    #studentDropdown::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1; 
+        border-radius: 4px;
+    }
+    
+    /* Hover effect for autocomplete items */
+    .list-group-item-action:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function showDropdown() {
+            var searchInput = document.getElementById("studentSearch");
+            // Only show dropdown if it's empty, or they are actively typing.
+            // If they already selected someone, they might click it again to change, so we clear the hidden input
+            document.getElementById("studentIdHidden").value = "";
+            document.getElementById("studentDropdown").style.display = "block";
+            filterStudents();
+        }
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            var searchInput = document.getElementById('studentSearch');
+            var dropdown = document.getElementById('studentDropdown');
+            if (!searchInput.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        function filterStudents() {
+            var input = document.getElementById("studentSearch");
+            var filter = input.value.toUpperCase();
+            var dropdown = document.getElementById("studentDropdown");
+            var li = dropdown.getElementsByTagName("li");
+            var hasVisible = false;
+            
+            dropdown.style.display = "block";
+
+            for (var i = 0; i < li.length; i++) {
+                if (li[i].id === "noResultsItem") continue;
+                
+                var textValue = li[i].textContent || li[i].innerText;
+                if (textValue.toUpperCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                    hasVisible = true;
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+            
+            document.getElementById("noResultsItem").style.display = hasVisible ? "none" : "block";
+        }
+
+        function selectStudent(id, displayText) {
+            // Set hidden value for form submission
+            document.getElementById("studentIdHidden").value = id;
+            
+            // Remove required attribute from visual text input since hidden handles it
+            var searchInput = document.getElementById("studentSearch");
+            searchInput.removeAttribute("required");
+            searchInput.value = displayText;
+            
+            // Hide dropdown
+            document.getElementById("studentDropdown").style.display = "none";
+        }
+    </script>
+}
