@@ -1,0 +1,124 @@
+@{
+    ViewData["Title"] = "My Courses";
+    var courseStats = Model as IEnumerable<dynamic>;
+}
+
+<div class="row mb-4 align-items-center">
+    <div class="col-md-12">
+        <h2 class="fw-bold mb-0">My Courses</h2>
+        <p class="text-muted mb-0">Select a course to view its dashboard, attendance, and sessions.</p>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+    @if(courseStats != null && courseStats.Any())
+    {
+        foreach(var stat in courseStats)
+        {
+            var course = stat.Course as ClassPluse.Models.Course;
+            bool isLive = stat.HasActiveSession;
+            double avgAttendance = stat.AvgAttendance;
+            string colorClass = avgAttendance >= 75 ? "success" : (avgAttendance >= 65 ? "warning text-dark" : "danger");
+
+            <div class="col">
+                <div class="card h-100 border border-light-subtle rounded-1 transition-hover @(isLive ? "border-dark border-2" : "")" style="cursor: pointer;" onclick="location.href='@Url.Action("CourseDashboard", "Faculty", new { courseId = course?.Id })'">
+                    <div class="card-header bg-transparent border-0 pt-4 pb-0 d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-muted mb-1"><i class="bi bi-tag me-1"></i> @course?.CourseCode</h6>
+                            <h5 class="card-title fw-bold mb-0 text-truncate" title="@course?.CourseName">@course?.CourseName</h5>
+                        </div>
+                        @if (isLive)
+                        {
+                            <span class="badge bg-dark rounded-pill px-3 py-2 animate-pulse">
+                                <i class="bi bi-record-circle me-1 text-danger"></i> LIVE
+                            </span>
+                        }
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center g-2 my-3">
+                            <div class="col-6 col-md-3">
+                                <div class="bg-light rounded-3 p-2 h-100">
+                                    <div class="fs-5 fw-bold text-dark">@stat.TotalEnrolled</div>
+                                    <div class="text-muted small">Enrolled</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="bg-light rounded-3 p-2 h-100">
+                                    <div class="fs-5 fw-bold text-@colorClass">@avgAttendance%</div>
+                                    <div class="text-muted small">Avg Att.</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="bg-light rounded-3 p-2 h-100">
+                                    <div class="fs-5 fw-bold text-dark">@stat.TotalSessions</div>
+                                    <div class="text-muted small">Hours</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="bg-light rounded-3 p-2 h-100 d-flex flex-column justify-content-center">
+                                    @if(stat.LastSessionDate != null)
+                                    {
+                                        <div class="fw-bold text-dark fs-6">@(((DateTime)stat.LastSessionDate).ToLocalTime().ToString("MMM dd"))</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="fw-bold text-muted fs-6">--</div>
+                                    }
+                                    <div class="text-muted small" style="font-size: 0.7rem;">Last Session</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top border-light-subtle py-3 rounded-bottom-1 d-flex gap-2" onclick="event.stopPropagation();">
+                        @if (isLive)
+                        {
+                            <a asp-action="LiveSession" asp-route-sessionId="@stat.ActiveSessionId" class="btn btn-primary flex-grow-1 rounded-pill fw-medium">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Go to Live
+                            </a>
+                        }
+                        else
+                        {
+                            <form asp-action="StartSession" method="post" class="flex-grow-1">
+                                <input type="hidden" name="courseId" value="@course?.Id" />
+                                <button type="submit" class="btn btn-outline-dark w-100 rounded-pill fw-medium">
+                                    <i class="bi bi-play-fill me-1"></i> Start
+                                </button>
+                            </form>
+                        }
+                        
+                        <a asp-action="ClassMatrix" asp-route-courseId="@course?.Id" class="btn btn-outline-secondary rounded-pill" title="Class Matrix">
+                            <i class="bi bi-grid-3x3"></i>
+                        </a>
+                        <a asp-action="Sessions" asp-route-courseId="@course?.Id" class="btn btn-outline-secondary rounded-pill" title="All Sessions">
+                            <i class="bi bi-list-ul"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="alert border border-light-subtle rounded-1 text-center py-5 bg-white text-secondary shadow-sm">
+                <i class="bi bi-journal-x fs-1 d-block mb-3 opacity-50"></i>
+                <h5 class="fw-bold text-dark">No courses assigned</h5>
+                <p class="mb-0">You are not currently teaching any courses.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .transition-hover { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+    .transition-hover:hover { transform: translateY(-2px); box-shadow: 0 .25rem .75rem rgba(0,0,0,.1)!important; }
+    
+    @@keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pulse {
+        animation: pulse 2s infinite ease-in-out;
+    }
+</style>

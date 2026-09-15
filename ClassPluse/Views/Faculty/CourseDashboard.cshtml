@@ -1,0 +1,148 @@
+@model ClassPluse.Models.Course
+@{
+    ViewData["Title"] = "Course Dashboard";
+    bool hasActiveSession = ViewBag.HasActiveSession;
+    int? activeSessionId = ViewBag.ActiveSessionId;
+    int totalEnrolled = ViewBag.TotalEnrolled;
+    int totalSessions = ViewBag.TotalSessions;
+    double avgAttendance = ViewBag.AvgAttendance;
+    var recentSessions = ViewBag.RecentSessions as IEnumerable<dynamic>;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a asp-action="MyCourses" class="btn btn-sm btn-outline-secondary rounded-pill mb-2">
+            <i class="bi bi-arrow-left me-1"></i> Back to Courses
+        </a>
+        <h2 class="fw-bold mb-0">@Model.CourseName <span class="text-muted fs-5">(@Model.CourseCode)</span></h2>
+    </div>
+    
+    @if (hasActiveSession)
+    {
+        <a asp-action="LiveSession" asp-route-sessionId="@activeSessionId" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-broadcast me-2"></i> Join Live Session
+        </a>
+    }
+    else
+    {
+        <form asp-action="StartSession" method="post" class="d-inline">
+            <input type="hidden" name="courseId" value="@Model.Id" />
+            <button type="submit" class="btn btn-dark rounded-pill px-4 shadow-sm">
+                <i class="bi bi-play-fill me-1"></i> Start New Session
+            </button>
+        </form>
+    }
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- Stat Cards -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+            <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                <div class="display-4 fw-bold text-dark mb-2">@totalEnrolled</div>
+                <div class="text-muted text-uppercase small fw-semibold tracking-wider">Total Enrolled</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+            <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                <div class="display-4 fw-bold text-@(avgAttendance >= 75 ? "success" : (avgAttendance >= 65 ? "warning" : "danger")) mb-2">@avgAttendance%</div>
+                <div class="text-muted text-uppercase small fw-semibold tracking-wider">Avg Attendance</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm rounded-3 h-100 bg-white">
+            <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                <div class="display-4 fw-bold text-dark mb-2">@totalSessions</div>
+                <div class="text-muted text-uppercase small fw-semibold tracking-wider">Total Lecture Hours</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Actions -->
+    <div class="col-lg-4 mb-4">
+        <h5 class="fw-bold mb-3">Quick Actions</h5>
+        <div class="d-grid gap-3">
+            <a asp-action="ClassMatrix" asp-route-courseId="@Model.Id" class="btn btn-light border btn-lg text-start rounded-3 py-3 hover-lift">
+                <i class="bi bi-grid-3x3 text-primary fs-4 me-3"></i> 
+                <span class="fw-medium">Class Attendance Matrix</span>
+            </a>
+            
+            <a asp-action="ExportReport" asp-route-courseId="@Model.Id" class="btn btn-light border btn-lg text-start rounded-3 py-3 hover-lift">
+                <i class="bi bi-file-earmark-excel text-success fs-4 me-3"></i> 
+                <span class="fw-medium">Export Excel Report</span>
+            </a>
+            
+            <a asp-action="Sessions" asp-route-courseId="@Model.Id" class="btn btn-light border btn-lg text-start rounded-3 py-3 hover-lift">
+                <i class="bi bi-list-ul text-secondary fs-4 me-3"></i> 
+                <span class="fw-medium">View All Sessions</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Sessions -->
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Recent Sessions</h5>
+            <a asp-action="Sessions" asp-route-courseId="@Model.Id" class="text-decoration-none small">View all</a>
+        </div>
+        
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+            <div class="list-group list-group-flush">
+                @if (recentSessions != null && recentSessions.Any())
+                {
+                    foreach (var stat in recentSessions)
+                    {
+                        var ls = stat.Session as ClassPluse.Models.LectureSession;
+                        var attendance = stat.TotalStudents > 0 
+                            ? Math.Round(((double)stat.PresentCount / stat.TotalStudents) * 100, 1) 
+                            : 0;
+                            
+                        <a asp-action="AdjustAttendance" asp-route-sessionId="@ls?.Id" class="list-group-item list-group-item-action p-4 transition-hover border-light-subtle">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <i class="bi bi-calendar-event text-secondary"></i>
+                                        <span class="fw-bold">@ls?.StartTime.ToLocalTime().ToString("MMMM dd, yyyy")</span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        @ls?.StartTime.ToLocalTime().ToString("hh:mm tt") - 
+                                        @(ls?.EndTime?.ToLocalTime().ToString("hh:mm tt") ?? "Ongoing")
+                                    </div>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <div class="fs-5 fw-bold text-@(attendance >= 75 ? "success" : (attendance >= 65 ? "warning" : "danger"))">
+                                        @attendance%
+                                    </div>
+                                    <div class="text-muted small">@stat.PresentCount / @stat.TotalStudents Present</div>
+                                </div>
+                            </div>
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="p-5 text-center text-muted">
+                        <i class="bi bi-inbox fs-1 opacity-50 mb-3 d-block"></i>
+                        No recent sessions found for this course.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-wider { letter-spacing: 0.05em; }
+    .hover-lift { transition: transform 0.2s, box-shadow 0.2s; }
+    .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08)!important; }
+    .transition-hover { transition: background-color 0.2s; }
+    .transition-hover:hover { background-color: #f8f9fa; }
+</style>

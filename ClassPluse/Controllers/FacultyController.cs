@@ -248,6 +248,103 @@ namespace ClassPluse.Controllers
             return View(enrolledStudents);
         }
 
+        public async Task<IActionResult> MyCourses()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var courses = await _context.Courses
+                .Where(c => c.FacultyId == user.Id)
+                .ToListAsync();
+
+            var courseStats = new List<dynamic>();
+            foreach (var course in courses)
+            {
+                var activeSession = await _context.LectureSessions
+                    .FirstOrDefaultAsync(ls => ls.CourseId == course.Id && ls.IsActive);
+                
+                var totalEnrolled = await _context.Enrollments
+                    .CountAsync(e => e.CourseId == course.Id);
+
+                var lastSession = await _context.LectureSessions
+                    .Where(ls => ls.CourseId == course.Id && !ls.IsActive)
+                    .OrderByDescending(ls => ls.StartTime)
+                    .FirstOrDefaultAsync();
+
+                var allSessionsIds = await _context.LectureSessions
+                    .Where(ls => ls.CourseId == course.Id && !ls.IsActive)
+                    .Select(ls => ls.Id)
+                    .ToListAsync();
+
+                var totalSessions = await _context.LectureSessions
+                    .CountAsync(ls => ls.CourseId == course.Id && ls.EndTime != null);
+
+                double avgAttendance = 0;
+                if (allSessionsIds.Any() && totalEnrolled > 0)
+                {
+                    var attendedCount = await _context.AttendanceRecords
+                        .CountAsync(a => allSessionsIds.Contains(a.LectureSessionId) && a.Status == AttendanceStatus.Present);
+                    
+                    var possibleAttendance = totalEnrolled * allSessionsIds.Count;
+                    avgAttendance = ((double)attendedCount / possibleAttendance) * 100;
+                }
+
+                courseStats.Add(new {
+                    Course = course,
+                    HasActiveSession = activeSession != null,
+                    ActiveSessionId = activeSession?.Id,
+                    TotalEnrolled = totalEnrolled,
+                    LastSessionDate = lastSession?.StartTime,
+                    AvgAttendance = Math.Round(avgAttendance, 1),
+                    TotalSessions = totalSessions
+                });
+            }
+
+            return View(courseStats);
+        }
+
+        public async Task<IActionResult> CourseDashboard(int courseId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var course = await _context.Courses.FirstOrDefaultAsync(c => c.Id == courseId && c.FacultyId == user!.Id);
+            if (course == null) return NotFound();
+
+            var activeSession = await _context.LectureSessions
+                .FirstOrDefaultAsync(ls => ls.CourseId == course.Id && ls.IsActive);
+            
+            var totalEnrolled = await _context.Enrollments
+                .CountAsync(e => e.CourseId == course.Id);
+
+            var totalSessions = await _context.LectureSessions
+                .CountAsync(ls => ls.CourseId == course.Id && ls.EndTime != null);
+
+            var attendedCount = await _context.AttendanceRecords
+                .CountAsync(a => a.LectureSession!.CourseId == course.Id && a.Status == AttendanceStatus.Present);
+            
+            var possibleAttendance = totalEnrolled * totalSessions;
+            double avgAttendance = possibleAttendance > 0 ? ((double)attendedCount / possibleAttendance) * 100 : 0;
+
+            var recentSessions = await _context.LectureSessions
+                .Where(ls => ls.CourseId == courseId && !ls.IsActive)
+                .OrderByDescending(ls => ls.StartTime)
+                .Take(5)
+                .Select(ls => new {
+                    Session = ls,
+                    TotalStudents = _context.Enrollments.Count(e => e.CourseId == ls.CourseId),
+                    PresentCount = _context.AttendanceRecords.Count(a => a.LectureSessionId == ls.Id && a.Status == AttendanceStatus.Present)
+                })
+                .ToListAsync();
+
+            ViewBag.HasActiveSession = activeSession != null;
+            ViewBag.ActiveSessionId = activeSession?.Id;
+            ViewBag.TotalEnrolled = totalEnrolled;
+            ViewBag.TotalSessions = totalSessions;
+            ViewBag.AvgAttendance = Math.Round(avgAttendance, 1);
+            ViewBag.RecentSessions = recentSessions;
+
+            return View(course);
+        }
+
         [HttpGet]
         public async Task<IActionResult> ExportReport(int courseId)
         {
