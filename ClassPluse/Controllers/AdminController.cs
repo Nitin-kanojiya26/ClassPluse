@@ -1,3 +1,4 @@
+using ClassPluse.Data;
 using ClassPluse.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

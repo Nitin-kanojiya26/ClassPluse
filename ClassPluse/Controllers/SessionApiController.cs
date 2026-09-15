@@ -10,9 +10,9 @@ namespace ClassPluse.Controllers
     public class SessionApiController : ControllerBase
     {
         private readonly QrTokenService _qrTokenService;
-        private readonly ClassPluse.Models.AttendanceDbContext _context;
+        private readonly ClassPluse.Data.AttendanceDbContext _context;
 
-        public SessionApiController(QrTokenService qrTokenService, ClassPluse.Models.AttendanceDbContext context)
+        public SessionApiController(QrTokenService qrTokenService, ClassPluse.Data.AttendanceDbContext context)
         {
             _qrTokenService = qrTokenService;
             _context = context;

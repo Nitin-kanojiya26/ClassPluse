@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using ClassPluse.Models;
 
-namespace ClassPluse.Models
+namespace ClassPluse.Data
 {
     public class AttendanceDbContext : IdentityDbContext<ApplicationUser>
     {

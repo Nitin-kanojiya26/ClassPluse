@@ -1,3 +1,4 @@
+using ClassPluse.Data;
 using ClassPluse.Models;
 using QRCoder;
 using Microsoft.EntityFrameworkCore;
