@@ -1,0 +1,230 @@
+@model ClassPluse.Models.LectureSession
+@{
+    ViewData["Title"] = "Live Session - " + Model.Course?.CourseName;
+    Layout = null; // Full screen projection view
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header-bar { 
+            background: white; 
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05); 
+            z-index: 10;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .qr-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            padding: 3rem;
+            text-align: center;
+        }
+        .qr-image { 
+            width: 400px; 
+            height: 400px; 
+            image-rendering: pixelated; 
+            border: 4px solid #f8f9fa;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 0 auto;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            padding: 2rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .timer-bar { 
+            height: 6px; 
+            background: #0d6efd; 
+            width: 100%; 
+            transition: width 1s linear; 
+            border-radius: 3px;
+        }
+        .timer-container {
+            width: 100%;
+            max-width: 400px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin: 1.5rem auto 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bar py-3 px-4 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle me-3">
+                <i class="bi bi-broadcast fs-4"></i>
+            </div>
+            <div>
+                <h3 class="mb-0 fw-bold">@Model.Course?.CourseName</h3>
+                <p class="text-muted mb-0"><i class="bi bi-clock me-1"></i> Started at @Model.StartTime.ToLocalTime().ToString("hh:mm tt")</p>
+            </div>
+        </div>
+        <form asp-action="EndSession" method="post" id="endSessionForm">
+            <input type="hidden" name="sessionId" value="@Model.Id" />
+            <button type="button" class="btn btn-danger btn-lg rounded-pill px-4 shadow-sm" onclick="confirmEndSession()">
+                <i class="bi bi-stop-circle-fill me-2"></i> End Session
+            </button>
+        </form>
+    </div>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="row g-4 justify-content-center align-items-center">
+                
+                <!-- QR Code Area -->
+                <div class="col-lg-7 text-center">
+                    <div class="qr-card">
+                        <h2 class="fw-bold mb-2">Scan to mark attendance</h2>
+                        <p class="text-muted fs-5 mb-4">Open your camera or the ClassPluse app</p>
+                        
+                        <div class="position-relative d-inline-block">
+                            <img id="qrImage" src="" alt="QR Code" class="qr-image shadow-sm" style="display: none;" />
+                            <div id="loadingSpinner" class="spinner-border text-primary position-absolute top-50 start-50 translate-middle" role="status" style="width: 4rem; height: 4rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+
+                        <div class="timer-container mt-4">
+                            <div id="progressBar" class="timer-bar"></div>
+                        </div>
+                        <p class="mt-2 text-muted fw-medium mb-0">Refreshing in <span id="countdown" class="text-primary fw-bold fs-5">15</span>s</p>
+                    </div>
+                </div>
+
+                <!-- Live Stats Area -->
+                <div class="col-lg-4">
+                    <div class="stats-card">
+                        <i class="bi bi-people-fill text-success opacity-50 mb-3" style="font-size: 5rem;"></i>
+                        <h4 class="text-muted text-uppercase tracking-wider fw-bold mb-4">Live Attendance</h4>
+                        
+                        <div class="d-flex align-items-baseline mb-2">
+                            <span id="presentCount" class="display-1 fw-bold text-dark">0</span>
+                            <span class="fs-2 text-muted mx-2">/</span>
+                            <span class="fs-2 text-muted">@ViewBag.TotalEnrolled</span>
+                        </div>
+                        <p class="fs-5 text-muted">Students marked present</p>
+                        
+                        <div class="progress w-100 mt-4 rounded-pill shadow-sm" style="height: 15px;">
+                            <div id="statsProgressBar" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sessionId = @Model.Id;
+        const totalEnrolled = @(ViewBag.TotalEnrolled ?? 0);
+        
+        // QR Polling
+        const qrImage = document.getElementById('qrImage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const countdownSpan = document.getElementById('countdown');
+        const progressBar = document.getElementById('progressBar');
+        
+        const refreshInterval = 15; // seconds
+        let timeLeft = refreshInterval;
+
+        async function fetchQrCode() {
+            try {
+                const response = await fetch(`/api/SessionApi/${sessionId}/qr`);
+                if (response.ok) {
+                    const data = await response.json();
+                    qrImage.src = 'data:image/png;base64,' + data.qrImageBase64;
+                    qrImage.style.display = 'block';
+                    loadingSpinner.style.display = 'none';
+                    resetTimer();
+                }
+            } catch (error) {
+                console.error("Error fetching QR:", error);
+            }
+        }
+
+        function resetTimer() {
+            timeLeft = refreshInterval;
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '100%';
+            
+            // Force reflow
+            void progressBar.offsetWidth;
+            
+            progressBar.style.transition = `width ${refreshInterval}s linear`;
+            progressBar.style.width = '0%';
+        }
+
+        function updateCountdown() {
+            countdownSpan.textContent = timeLeft;
+            timeLeft--;
+            if (timeLeft < 0) {
+                fetchQrCode();
+            }
+        }
+
+        // Stats Polling
+        const presentCountEl = document.getElementById('presentCount');
+        const statsProgressBar = document.getElementById('statsProgressBar');
+
+        async function fetchLiveStats() {
+            try {
+                const response = await fetch(`/api/SessionApi/${sessionId}/stats`);
+                if (response.ok) {
+                    const data = await response.json();
+                    presentCountEl.textContent = data.presentCount;
+                    
+                    if (totalEnrolled > 0) {
+                        const percentage = (data.presentCount / totalEnrolled) * 100;
+                        statsProgressBar.style.width = `${percentage}%`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching stats:", error);
+            }
+        }
+
+        // End Session Confirmation
+        function confirmEndSession() {
+            if (confirm("Are you sure you want to end this live session? No more students will be able to mark attendance.")) {
+                document.getElementById('endSessionForm').submit();
+            }
+        }
+
+        // Initialization
+        fetchQrCode();
+        fetchLiveStats();
+        
+        // Setup intervals
+        setInterval(updateCountdown, 1000);
+        setInterval(fetchLiveStats, 3000); // Poll stats every 3 seconds
+    </script>
+</body>
+</html>

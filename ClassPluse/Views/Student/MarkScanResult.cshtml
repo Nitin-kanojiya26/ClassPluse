@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "Attendance Scan Result";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    @if (ViewBag.Success != null && ViewBag.Success)
+                    {
+                        <div class="text-success mb-3">
+                            <i class="bi bi-check-circle-fill" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="card-title text-success">Success</h3>
+                        <p class="card-text fs-5">@ViewBag.Message</p>
+                    }
+                    else
+                    {
+                        <div class="text-danger mb-3">
+                            <i class="bi bi-x-circle-fill" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="card-title text-danger">Failed</h3>
+                        <p class="card-text fs-5">@ViewBag.Message</p>
+                    }
+                    <div class="mt-4">
+                        <a asp-action="Dashboard" class="btn btn-primary">Return to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

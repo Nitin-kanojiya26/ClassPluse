@@ -1,0 +1,97 @@
+@model IEnumerable<ClassPluse.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Adjust Attendance";
+    var attendanceRecords = ViewBag.AttendanceRecords as IEnumerable<ClassPluse.Models.AttendanceRecord> ?? new List<ClassPluse.Models.AttendanceRecord>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Adjust Attendance</h2>
+        <p class="text-muted mb-0"><i class="bi bi-journal-text me-1"></i> @ViewBag.CourseName</p>
+    </div>
+    <a asp-action="Sessions" asp-route-courseId="@(attendanceRecords.FirstOrDefault()?.LectureSession?.CourseId ?? 0)" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+        <i class="bi bi-arrow-left me-1"></i> Back to Sessions
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
+    <div class="card-body p-0">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-muted small text-uppercase tracking-wider">
+                <tr>
+                    <th class="ps-4 py-3">Student Name</th>
+                    <th class="py-3">Roll Number</th>
+                    <th class="py-3">Current Status</th>
+                    <th class="pe-4 py-3 text-end">Update Status</th>
+                </tr>
+            </thead>
+            <tbody class="border-top-0">
+                @foreach(var student in Model)
+                {
+                    var record = attendanceRecords.FirstOrDefault(a => a.StudentId == student.Id);
+                    var status = record?.Status;
+                    
+                    <tr>
+                        <td class="ps-4 py-3 fw-medium text-dark">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    @student.FullName.Substring(0, 1).ToUpper()
+                                </div>
+                                @student.FullName
+                            </div>
+                        </td>
+                        <td class="py-3 text-muted">@(student.RollNumber ?? "-")</td>
+                        <td class="py-3">
+                            @if (status == ClassPluse.Models.AttendanceStatus.Present)
+                            {
+                                <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">Present</span>
+                            }
+                            else if (status == ClassPluse.Models.AttendanceStatus.Absent)
+                            {
+                                <span class="badge bg-danger rounded-pill px-3 py-2 shadow-sm">Absent</span>
+                            }
+                            else if (status == ClassPluse.Models.AttendanceStatus.Excused)
+                            {
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm">Excused</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary rounded-pill px-3 py-2 shadow-sm">Unmarked</span>
+                            }
+                            
+                            @if(record?.MarkedBy == ClassPluse.Models.MarkedByType.Scan)
+                            {
+                                <small class="text-muted ms-2"><i class="bi bi-qr-code text-primary"></i> Scanned</small>
+                            }
+                        </td>
+                        <td class="pe-4 py-3 text-end">
+                            <form asp-action="UpdateAttendance" method="post" class="d-flex justify-content-end gap-2">
+                                <input type="hidden" name="sessionId" value="@ViewBag.SessionId" />
+                                <input type="hidden" name="studentId" value="@student.Id" />
+                                <select name="status" class="form-select form-select-sm rounded-pill shadow-sm" style="width: auto; cursor: pointer;">
+                                    <option value="Present" selected="@(status == ClassPluse.Models.AttendanceStatus.Present)">Present</option>
+                                    <option value="Absent" selected="@(status == ClassPluse.Models.AttendanceStatus.Absent)">Absent</option>
+                                    <option value="Excused" selected="@(status == ClassPluse.Models.AttendanceStatus.Excused)">Excused</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">Update</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if(!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
+                            No students enrolled in this course.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .tracking-wider { letter-spacing: 0.05em; }
+</style>

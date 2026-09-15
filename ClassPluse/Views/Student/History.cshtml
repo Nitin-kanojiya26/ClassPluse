@@ -1,0 +1,127 @@
+@model IEnumerable<ClassPluse.Models.AttendanceRecord>
+@{
+    ViewData["Title"] = "Attendance History - " + ViewBag.CourseName;
+}
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Attendance History</h2>
+            <p class="text-muted mb-0"><i class="bi bi-journal-text me-1"></i> @ViewBag.CourseName</p>
+        </div>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Summary Strip -->
+    @{
+        double percentage = ViewBag.Percentage ?? 0;
+        string colorClass = percentage >= 75 ? "success" : (percentage >= 65 ? "warning" : "danger");
+    }
+    <div class="card shadow-sm border-0 rounded-4 mb-4 bg-light">
+        <div class="card-body">
+            <div class="row align-items-center text-center">
+                <div class="col-md-4 border-end">
+                    <h3 class="fw-bold mb-0">@ViewBag.TotalSessions</h3>
+                    <p class="text-muted text-uppercase small mb-0 tracking-wider">Total Lectures</p>
+                </div>
+                <div class="col-md-4 border-end">
+                    <h3 class="fw-bold mb-0">@ViewBag.AttendedSessions</h3>
+                    <p class="text-muted text-uppercase small mb-0 tracking-wider">Attended</p>
+                </div>
+                <div class="col-md-4">
+                    <h3 class="fw-bold text-@colorClass mb-0">@percentage%</h3>
+                    <p class="text-muted text-uppercase small mb-0 tracking-wider">Attendance Rate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase tracking-wider small text-muted">
+                    <tr>
+                        <th class="ps-4 py-3">Date</th>
+                        <th class="py-3">Time</th>
+                        <th class="py-3">Professor</th>
+                        <th class="py-3 text-center">Status</th>
+                        <th class="pe-4 py-3 text-end">Marked By</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    @foreach(var record in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="fw-bold text-dark">@record.LectureSession?.StartTime.ToLocalTime().ToString("MMM dd")</div>
+                                <div class="text-muted small">@record.LectureSession?.StartTime.ToLocalTime().ToString("yyyy")</div>
+                            </td>
+                            <td class="py-3 text-muted">
+                                <i class="bi bi-clock me-1"></i> @record.LectureSession?.StartTime.ToLocalTime().ToString("hh:mm tt")
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-secondary text-white rounded-circle d-flex justify-content-center align-items-center me-2" style="width: 32px; height: 32px;">
+                                        @(record.LectureSession?.Faculty?.FullName?.FirstOrDefault().ToString() ?? "F")
+                                    </div>
+                                    <span class="fw-medium">@record.LectureSession?.Faculty?.FullName</span>
+                                </div>
+                            </td>
+                            <td class="py-3 text-center">
+                                @if(record.Status == ClassPluse.Models.AttendanceStatus.Present)
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> Present</span>
+                                }
+                                else if(record.Status == ClassPluse.Models.AttendanceStatus.Absent)
+                                {
+                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2"><i class="bi bi-x-circle-fill me-1"></i> Absent</span>
+                                }
+                                else if(record.Status == ClassPluse.Models.AttendanceStatus.Excused)
+                                {
+                                    <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50 rounded-pill px-3 py-2"><i class="bi bi-exclamation-circle-fill me-1 text-warning"></i> Excused</span>
+                                }
+                            </td>
+                            <td class="pe-4 py-3 text-end">
+                                @if(record.MarkedBy == ClassPluse.Models.MarkedByType.Scan)
+                                {
+                                    <span class="badge bg-light text-dark border rounded-pill px-3 py-2">
+                                        <i class="bi bi-phone text-primary me-1"></i> QR Scan
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-dark border rounded-pill px-3 py-2">
+                                        <i class="bi bi-person text-secondary me-1"></i> Faculty
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if(!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-folder2-open display-4 mb-3 d-block opacity-50"></i>
+                                    <h5>No Records Found</h5>
+                                    <p class="mb-0">There are no attendance records for this course yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,0,0,.02);
+    }
+</style>

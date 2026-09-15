@@ -1,0 +1,180 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">System Overview</h2>
+        <p class="text-muted mb-0">Manage users, courses, and platform activity.</p>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
+    <div class="col">
+        <div class="card shadow-sm border-0 rounded-4 h-100 bg-primary text-white transition-hover">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="display-5 fw-bold mb-0">@ViewBag.StudentsCount</h2>
+                    <p class="mb-0 text-white-50 text-uppercase tracking-wider small fw-bold">Students</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="bi bi-mortarboard fs-2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col">
+        <div class="card shadow-sm border-0 rounded-4 h-100 bg-info text-white transition-hover">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="display-5 fw-bold mb-0">@ViewBag.FacultyCount</h2>
+                    <p class="mb-0 text-white-50 text-uppercase tracking-wider small fw-bold">Faculty</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="bi bi-person-workspace fs-2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col">
+        <div class="card shadow-sm border-0 rounded-4 h-100 bg-warning text-dark transition-hover">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="display-5 fw-bold mb-0">@ViewBag.CoursesCount</h2>
+                    <p class="mb-0 text-dark-50 text-uppercase tracking-wider small fw-bold" style="opacity: 0.7;">Courses</p>
+                </div>
+                <div class="bg-dark bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-journal-bookmark fs-2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col">
+        <div class="card shadow-sm border-0 rounded-4 h-100 bg-success text-white transition-hover">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <h2 class="display-5 fw-bold mb-0">@ViewBag.SessionsToday</h2>
+                    <p class="mb-0 text-white-50 text-uppercase tracking-wider small fw-bold">Sessions Today</p>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="bi bi-broadcast fs-2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-md-6">
+        <h4 class="fw-bold mb-4">Management Areas</h4>
+        <div class="row row-cols-1 g-4">
+            <div class="col">
+                <div class="card shadow-sm border-0 rounded-4 h-100 transition-hover">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-3 me-4">
+                            <i class="bi bi-people fs-2"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1">User Management</h5>
+                            <p class="text-muted small mb-0">Add, edit, or remove students and faculty.</p>
+                        </div>
+                        <a asp-action="Users" class="btn btn-outline-primary rounded-pill px-4">Manage</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col">
+                <div class="card shadow-sm border-0 rounded-4 h-100 transition-hover">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 text-info rounded-circle d-inline-flex p-3 me-4">
+                            <i class="bi bi-journal-text fs-2"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1">Course Setup</h5>
+                            <p class="text-muted small mb-0">Create new courses and assign faculty.</p>
+                        </div>
+                        <a asp-action="Courses" class="btn btn-outline-info rounded-pill px-4">Manage</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col">
+                <div class="card shadow-sm border-0 rounded-4 h-100 transition-hover">
+                    <div class="card-body p-4 d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex p-3 me-4">
+                            <i class="bi bi-person-lines-fill fs-2"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="fw-bold mb-1">Enrollments</h5>
+                            <p class="text-muted small mb-0">Enroll students into active courses.</p>
+                        </div>
+                        <a asp-action="Enrollments" class="btn btn-outline-warning text-dark rounded-pill px-4">Manage</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mt-5 mt-md-0">
+        <h4 class="fw-bold mb-4">User Distribution</h4>
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body p-4 d-flex justify-content-center align-items-center">
+                <div style="width: 100%; max-width: 220px; margin: 0 auto;">
+                    <canvas id="userDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-wider { letter-spacing: 0.05em; }
+    .transition-hover { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+    .transition-hover:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('userDistributionChart').getContext('2d');
+            const studentsCount = @ViewBag.StudentsCount;
+            const facultyCount = @ViewBag.FacultyCount;
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Students', 'Faculty'],
+                    datasets: [{
+                        data: [studentsCount, facultyCount],
+                        backgroundColor: [
+                            'rgba(13, 110, 253, 0.8)', // Primary blue
+                            'rgba(13, 202, 240, 0.8)'  // Info blue
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    cutout: '75%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: "'Inter', sans-serif",
+                                    size: 12
+                                },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

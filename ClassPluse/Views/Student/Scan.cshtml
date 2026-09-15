@@ -1,0 +1,141 @@
+@{
+    ViewData["Title"] = "Scan QR Code";
+    ViewData["HideNavbar"] = true; // hide the global navbar for a clean mobile experience
+}
+
+<div class="d-flex flex-column" style="min-height: 100vh;">
+    <!-- Minimal Header -->
+    <div class="d-flex justify-content-between align-items-center p-3 bg-white shadow-sm border-bottom">
+        <a asp-action="Dashboard" class="btn btn-light rounded-circle p-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-arrow-left fs-5"></i>
+        </a>
+        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-mortarboard-fill text-primary me-2"></i>ClassPluse</h5>
+        <div style="width: 40px;"></div> <!-- Spacer for centering -->
+    </div>
+
+    <!-- Scanner Area -->
+    <div class="flex-grow-1 d-flex flex-column justify-content-center align-items-center p-3" style="background-color: #f8f9fa;">
+        <div class="w-100" style="max-width: 500px;">
+            <div id="reader" class="rounded-4 overflow-hidden shadow bg-dark mb-4 border border-3 border-white" style="width: 100%;"></div>
+            
+            <div id="statusContainer" class="text-center mt-2">
+                <!-- Idle State -->
+                <div id="stateIdle" class="text-muted">
+                    <i class="bi bi-camera-video display-4 mb-2 d-block opacity-50"></i>
+                    <p class="fs-5">Point your camera at the projected QR code</p>
+                </div>
+                
+                <!-- Success State -->
+                <div id="stateSuccess" class="alert alert-success shadow-sm rounded-4 border-0 py-4" style="display: none;">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    <h4 class="alert-heading fw-bold mt-3">Success!</h4>
+                    <p id="successMessage" class="mb-0 fs-5">Attendance marked successfully.</p>
+                </div>
+                
+                <!-- Error State -->
+                <div id="stateError" class="alert alert-danger shadow-sm rounded-4 border-0 py-4" style="display: none;">
+                    <i class="bi bi-x-circle-fill text-danger" style="font-size: 4rem;"></i>
+                    <h4 class="alert-heading fw-bold mt-3">Failed</h4>
+                    <p id="errorMessage" class="mb-0 fs-5">QR code expired, ask your professor to refresh.</p>
+                    <button class="btn btn-outline-danger mt-3 rounded-pill" onclick="resetScanner()">Tap to scan again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+        let html5QrcodeScanner = null;
+        let isProcessing = false;
+
+        function setUIState(state, message = "") {
+            document.getElementById('stateIdle').style.display = 'none';
+            document.getElementById('stateSuccess').style.display = 'none';
+            document.getElementById('stateError').style.display = 'none';
+            document.getElementById('reader').style.opacity = '1';
+
+            if (state === 'idle') {
+                document.getElementById('stateIdle').style.display = 'block';
+            } else if (state === 'success') {
+                document.getElementById('stateSuccess').style.display = 'block';
+                document.getElementById('successMessage').textContent = message;
+                document.getElementById('reader').style.opacity = '0.3';
+            } else if (state === 'error') {
+                document.getElementById('stateError').style.display = 'block';
+                document.getElementById('errorMessage').textContent = message;
+                document.getElementById('reader').style.opacity = '0.3';
+            }
+        }
+
+        function resetScanner() {
+            isProcessing = false;
+            setUIState('idle');
+            html5QrcodeScanner.resume();
+        }
+
+        function extractToken(text) {
+            // Handle if the QR code is a full URL containing '?token='
+            try {
+                if (text.includes('token=')) {
+                    const url = new URL(text);
+                    return url.searchParams.get('token') || text;
+                }
+            } catch (e) {
+                // Not a valid URL, treat as raw token
+            }
+            return text;
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            html5QrcodeScanner.pause(true);
+            const token = extractToken(decodedText);
+            
+            // Temporary loading state
+            document.getElementById('stateIdle').innerHTML = '<div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div><p class="mt-3 fs-5 text-muted">Processing...</p>';
+
+            fetch('/api/AttendanceApi/mark', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ token: token })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    setUIState('success', data.message);
+                    // Navigate back to dashboard after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '@Url.Action("Dashboard", "Student")';
+                    }, 2000);
+                } else {
+                    setUIState('error', data.message || 'Verification failed');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                setUIState('error', 'A network error occurred. Please try again.');
+            });
+        }
+
+        function onScanFailure(error) {
+            // ignore continuous scanning errors
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    showTorchButtonIfSupported: true
+                }, false);
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        });
+    </script>
+}

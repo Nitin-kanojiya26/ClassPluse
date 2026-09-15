@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "Create Enrollment";
+    var courses = ViewBag.Courses as IEnumerable<ClassPluse.Models.Course>;
+    var students = ViewBag.Students as IEnumerable<ClassPluse.Models.ApplicationUser>;
+}
+
+<div class="container mt-4">
+    <h2>Enroll Student in Course</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="CreateEnrollment" method="post">
+                <div class="mb-3">
+                    <label class="form-label">Course</label>
+                    <select name="courseId" class="form-select" required>
+                        <option value="">-- Select Course --</option>
+                        @if(courses != null)
+                        {
+                            foreach(var c in courses)
+                            {
+                                <option value="@c.Id">@c.CourseName (@c.CourseCode)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Student</label>
+                    <select name="studentId" class="form-select" required>
+                        <option value="">-- Select Student --</option>
+                        @if(students != null)
+                        {
+                            foreach(var s in students)
+                            {
+                                <option value="@s.Id">@s.FullName (@(s.RollNumber ?? s.Email))</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Enroll Student</button>
+                <a asp-action="Enrollments" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>

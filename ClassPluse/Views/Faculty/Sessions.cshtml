@@ -1,0 +1,66 @@
+@model IEnumerable<ClassPluse.Models.LectureSession>
+@{
+    ViewData["Title"] = "Sessions for " + ViewBag.CourseName;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Sessions: @ViewBag.CourseName</h2>
+        <form asp-action="StartSession" method="post">
+            <input type="hidden" name="courseId" value="@ViewBag.CourseId" />
+            <button type="submit" class="btn btn-success btn-lg">Start New Session</button>
+        </form>
+    </div>
+
+    <table class="table table-hover table-striped shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Date</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var session in Model)
+            {
+                <tr>
+                    <td>@session.StartTime.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                    <td>@session.StartTime.ToLocalTime().ToString("hh:mm tt")</td>
+                    <td>@(session.EndTime?.ToLocalTime().ToString("hh:mm tt") ?? "-")</td>
+                    <td>
+                        @if (session.IsActive)
+                        {
+                            <span class="badge bg-success">Live</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Ended</span>
+                        }
+                    </td>
+                    <td>
+                        @if (session.IsActive)
+                        {
+                            <a asp-action="LiveSession" asp-route-sessionId="@session.Id" class="btn btn-sm btn-primary">Project QR</a>
+                            <form asp-action="EndSession" method="post" class="d-inline">
+                                <input type="hidden" name="sessionId" value="@session.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger">End Session</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-action="AdjustAttendance" asp-route-sessionId="@session.Id" class="btn btn-sm btn-info text-white">Adjust Attendance</a>
+                        }
+                    </td>
+                </tr>
+            }
+            @if(!Model.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No sessions recorded yet.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

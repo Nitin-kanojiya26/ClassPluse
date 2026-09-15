@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="container mt-4">
+    <h2>Create New User</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-6">
+            <form asp-action="CreateUser" method="post">
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input name="fullName" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <input name="email" type="email" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input name="password" type="password" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <select name="role" id="roleSelect" class="form-select" required onchange="toggleStudentFields()">
+                        <option value="Faculty">Faculty</option>
+                        <option value="Student">Student</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div id="studentFields" style="display:none;">
+                    <div class="mb-3">
+                        <label class="form-label">Roll Number</label>
+                        <input name="rollNumber" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <input name="department" class="form-control" />
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create User</button>
+                <a asp-action="Users" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleStudentFields() {
+            var role = document.getElementById("roleSelect").value;
+            var fields = document.getElementById("studentFields");
+            if (role === "Student") {
+                fields.style.display = "block";
+            } else {
+                fields.style.display = "none";
+            }
+        }
+        toggleStudentFields();
+    </script>
+}

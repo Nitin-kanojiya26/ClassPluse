@@ -1,0 +1,109 @@
+@model IEnumerable<ClassPluse.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Class Matrix";
+    var sessions = ViewBag.Sessions as List<ClassPluse.Models.LectureSession> ?? new List<ClassPluse.Models.LectureSession>();
+    var attendanceRecords = ViewBag.AttendanceRecords as List<ClassPluse.Models.AttendanceRecord> ?? new List<ClassPluse.Models.AttendanceRecord>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Class Matrix</h2>
+        <p class="text-muted mb-0"><i class="bi bi-grid-3x3 me-1"></i> @ViewBag.CourseName</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportReport" asp-route-courseId="@ViewBag.CourseId" class="btn btn-outline-success rounded-pill px-4 shadow-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 70vh;">
+            <table class="table table-hover table-bordered align-middle mb-0" style="min-width: max-content;">
+                <thead class="table-light text-muted small text-uppercase tracking-wider">
+                    <tr>
+                        <th class="ps-4 py-3 position-sticky start-0 bg-light border-end" style="z-index: 2;">Student Name</th>
+                        <th class="py-3 text-center border-end" style="min-width: 100px;">Overall %</th>
+                        @foreach(var session in sessions)
+                        {
+                            <th class="py-3 text-center" style="min-width: 60px;" title="@session.StartTime.ToLocalTime().ToString("g")">
+                                <div class="fw-bold text-dark">@session.StartTime.ToLocalTime().ToString("dd")</div>
+                                <div style="font-size: 0.7rem;">@session.StartTime.ToLocalTime().ToString("MMM")</div>
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    @foreach(var student in Model)
+                    {
+                        int attended = 0;
+                        <tr>
+                            <td class="ps-4 py-3 position-sticky start-0 bg-white border-end shadow-sm">
+                                <div class="fw-medium text-dark">@student.FullName</div>
+                                <div class="small text-muted">@student.RollNumber</div>
+                            </td>
+                            
+                            @* Calculate percentage first *@
+                            @{
+                                foreach(var session in sessions)
+                                {
+                                    var r = attendanceRecords.FirstOrDefault(a => a.StudentId == student.Id && a.LectureSessionId == session.Id);
+                                    if (r?.Status == ClassPluse.Models.AttendanceStatus.Present) attended++;
+                                }
+                                double percentage = sessions.Count > 0 ? ((double)attended / sessions.Count) * 100 : 0;
+                                string pColor = percentage >= 75 ? "text-success" : (percentage >= 65 ? "text-warning" : "text-danger");
+                            }
+                            <td class="align-middle text-center border-end">
+                                <span class="fw-bold fs-5 @pColor">@Math.Round(percentage, 1)%</span>
+                            </td>
+
+                            @foreach(var session in sessions)
+                            {
+                                var record = attendanceRecords.FirstOrDefault(a => a.StudentId == student.Id && a.LectureSessionId == session.Id);
+                                <td class="text-center align-middle">
+                                    @if(record == null)
+                                    {
+                                        <span class="text-muted opacity-25">-</span>
+                                    }
+                                    else if (record.Status == ClassPluse.Models.AttendanceStatus.Present)
+                                    {
+                                        <div class="bg-success bg-opacity-10 text-success rounded px-2 py-1 fw-bold mx-auto" style="width: 32px;" title="Present">P</div>
+                                    }
+                                    else if (record.Status == ClassPluse.Models.AttendanceStatus.Absent)
+                                    {
+                                        <div class="bg-danger bg-opacity-10 text-danger rounded px-2 py-1 fw-bold mx-auto" style="width: 32px;" title="Absent">A</div>
+                                    }
+                                    else if (record.Status == ClassPluse.Models.AttendanceStatus.Excused)
+                                    {
+                                        <div class="bg-warning bg-opacity-10 text-warning rounded px-2 py-1 fw-bold mx-auto" style="width: 32px;" title="Excused">E</div>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                    @if(!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="@(sessions.Count + 2)" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
+                                No students enrolled in this course.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-wider { letter-spacing: 0.05em; }
+    /* Ensure sticky column shadow doesn't look weird on scroll */
+    .table-responsive {
+        box-shadow: inset -10px 0 10px -10px rgba(0,0,0,0.05);
+    }
+</style>
