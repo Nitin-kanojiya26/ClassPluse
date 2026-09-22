@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+@using Microsoft.AspNetCore.Identity
+@using ClassPluse.Models
+@inject UserManager<ApplicationUser> UserManager
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -29,48 +32,45 @@
                     </div>
                     ClassPluse
                 </a>
-                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1 ms-lg-4">
+                <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+                    <ul class="navbar-nav flex-grow-1 ms-lg-4 mt-3 mt-lg-0">
                         @if (User.IsInRole("Admin"))
                         {
-                            <li class="nav-item me-2">
+                            <li class="nav-item mb-2 mb-lg-0 me-lg-2">
                                 <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Admin" asp-action="Index">Dashboard</a>
                             </li>
-                            <li class="nav-item me-2">
+                            <li class="nav-item mb-2 mb-lg-0 me-lg-2">
                                 <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Admin" asp-action="Users">Users</a>
                             </li>
-                            <li class="nav-item me-2">
+                            <li class="nav-item mb-2 mb-lg-0 me-lg-2">
                                 <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Admin" asp-action="Courses">Courses</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item mb-2 mb-lg-0">
                                 <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Admin" asp-action="Enrollments">Enrollments</a>
                             </li>
                         }
                         else if (User.IsInRole("Faculty"))
                         {
-                            <li class="nav-item me-2">
+                            <li class="nav-item mb-2 mb-lg-0 me-lg-2">
                                 <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Faculty" asp-action="Index">Dashboard</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item mb-2 mb-lg-0">
                                 <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Faculty" asp-action="MyCourses">My Courses</a>
                             </li>
                         }
                         else if (User.IsInRole("Student"))
                         {
-                            <li class="nav-item me-2">
+                            <li class="nav-item mb-2 mb-lg-0 me-lg-2">
                                 <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Student" asp-action="Dashboard">Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Student" asp-action="Scan">Scan QR</a>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item">
+                            <li class="nav-item mb-2 mb-lg-0">
                                 <a class="nav-link text-secondary fw-medium px-3 rounded-1 transition-hover hover-bg-light" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
                         }
@@ -82,6 +82,9 @@
                             string roleClass = "bg-light text-dark border";
                             if (User.IsInRole("Admin")) { roleBadge = "Admin"; roleClass = "bg-dark text-white"; }
                             if (User.IsInRole("Faculty")) { roleBadge = "Faculty"; roleClass = "bg-secondary text-white"; }
+
+                            var currentUser = await UserManager.GetUserAsync(User);
+                            var personalEmail = currentUser?.PersonalEmail;
 
                             <li class="nav-item dropdown d-flex align-items-center me-4 mb-3 mb-lg-0">
                                 <a href="#" class="nav-link dropdown-toggle d-flex align-items-center text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0;">
@@ -97,7 +100,14 @@
                                         <i class="bi bi-person text-secondary"></i>
                                     </div>
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-light-subtle rounded-1 mt-2">
+                                <ul class="dropdown-menu dropdown-menu-lg-end shadow-sm border-light-subtle rounded-1 mt-2">
+                                    @if (!string.IsNullOrEmpty(personalEmail))
+                                    {
+                                        <li class="px-3 py-2 border-bottom mb-1">
+                                            <div class="text-muted" style="font-size: 0.75rem;">Personal Email:</div>
+                                            <div class="fw-semibold small text-dark">@personalEmail</div>
+                                        </li>
+                                    }
                                     <li><a class="dropdown-item small" asp-controller="Account" asp-action="ChangePassword"><i class="bi bi-key me-2 text-muted"></i>Change Password</a></li>
                                 </ul>
                             </li>
@@ -151,6 +161,11 @@
             font-weight: 600 !important;
             background-color: #f8f9fa;
         }
+
+        /* Shared Utilities */
+        .tracking-wider { letter-spacing: 0.05em; }
+        .transition-hover { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .transition-hover:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
     </style>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

@@ -31,7 +31,7 @@ namespace ClassPluse.Controllers
             {
                 return BadRequest(new { message = "Session is inactive or invalid." });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "Error generating QR code." });
             }

@@ -2,7 +2,6 @@
     ViewData["Title"] = "Dashboard";
     var dashboardData = ViewBag.DashboardData as IEnumerable<dynamic>;
     var recentActivity = ViewBag.RecentActivity as IEnumerable<ClassPluse.Models.AttendanceRecord>;
-    bool hasLowAttendance = false;
 }
 
 <div class="container-fluid px-0">
@@ -33,7 +32,6 @@
                         <strong>Attention:</strong> Attendance in @course?.CourseName is @Math.Round(percentage, 1)%, which is below the 75% requirement.
                     </div>
                 </div>
-                hasLowAttendance = true;
             }
         }
     }

@@ -1,5 +1,7 @@
 using ClassPluse.Data;
+using ClassPluse.Extensions;
 using ClassPluse.Models;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,9 +24,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<ClassPluse.Services.CryptoService>();
-builder.Services.AddScoped<ClassPluse.Services.QrTokenService>();
-builder.Services.AddScoped<ClassPluse.Services.IEmailService, ClassPluse.Services.SmtpEmailService>();
+// Register application specific services
+builder.Services.AddClassPluseServices();
 
 var app = builder.Build();
 
@@ -84,7 +85,11 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
+// Add this BEFORE app.UseRouting() or app.UseEndpoints()
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 app.UseHttpsRedirection();
 app.UseRouting();
 

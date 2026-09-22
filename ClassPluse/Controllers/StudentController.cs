@@ -13,142 +13,95 @@ namespace ClassPluse.Controllers
         private readonly AttendanceDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ClassPluse.Services.CryptoService _cryptoService;
+        private readonly ClassPluse.Services.FaceRecognitionService _faceRecognitionService;
 
-        public StudentController(AttendanceDbContext context, UserManager<ApplicationUser> userManager, ClassPluse.Services.CryptoService cryptoService)
+        public StudentController(
+            AttendanceDbContext context, 
+            UserManager<ApplicationUser> userManager, 
+            ClassPluse.Services.CryptoService cryptoService,
+            ClassPluse.Services.FaceRecognitionService faceRecognitionService)
         {
             _context = context;
             _userManager = userManager;
             _cryptoService = cryptoService;
+            _faceRecognitionService = faceRecognitionService;
         }
 
-        public IActionResult Scan()
+        public IActionResult Scan(string? prefilledToken)
         {
+            ViewBag.PrefilledToken = prefilledToken;
             return View();
         }
 
         [HttpGet]
-        public async Task<IActionResult> MarkScan(string token)
+        public async Task<IActionResult> RegisterFace()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
 
-            if (string.IsNullOrEmpty(token))
+            if (user.HasRegisteredFace)
             {
-                ViewBag.Message = "Token is required.";
-                ViewBag.Success = false;
-                return View("MarkScanResult");
+                return RedirectToAction("Dashboard");
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RegisterFace([FromBody] RegisterFaceRequest request)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            if (string.IsNullOrEmpty(request.FaceImageBase64))
+            {
+                return BadRequest(ApiResponse.Error("No image provided."));
             }
 
             try
             {
-                var decryptedPayload = _cryptoService.Decrypt(token);
-                var parts = decryptedPayload.Split('|');
-                if (parts.Length != 3)
+                // Remove data:image/jpeg;base64, prefix if present
+                var base64Data = request.FaceImageBase64.Contains(",") 
+                    ? request.FaceImageBase64.Split(',')[1] 
+                    : request.FaceImageBase64;
+                    
+                byte[] imageBytes = Convert.FromBase64String(base64Data);
+
+                var encoding = _faceRecognitionService.GetFaceEncodingFromImage(imageBytes);
+
+                if (string.IsNullOrEmpty(encoding))
                 {
-                    ViewBag.Message = "Invalid token format.";
-                    ViewBag.Success = false;
-                    return View("MarkScanResult");
+                    return BadRequest(ApiResponse.Error("Could not detect a face. Please ensure your face is clearly visible."));
                 }
 
-                var sessionIdStr = parts[0];
-                var timestampStr = parts[1];
-                var providedHmac = parts[2];
-
-                var basePayload = $"{sessionIdStr}|{timestampStr}";
-                var expectedHmac = _cryptoService.GenerateHmac(basePayload);
-                if (providedHmac != expectedHmac)
-                {
-                    ViewBag.Message = "Token signature is invalid.";
-                    ViewBag.Success = false;
-                    return View("MarkScanResult");
-                }
-
-                if (!int.TryParse(sessionIdStr, out int sessionId))
-                {
-                    ViewBag.Message = "Invalid session ID.";
-                    ViewBag.Success = false;
-                    return View("MarkScanResult");
-                }
-
-                var session = await _context.LectureSessions.FindAsync(sessionId);
-                if (session == null || !session.IsActive)
-                {
-                    ViewBag.Message = "Session is not active.";
-                    ViewBag.Success = false;
-                    return View("MarkScanResult");
-                }
-
-                var dbToken = await _context.QrTokens
-                    .FirstOrDefaultAsync(t => t.LectureSessionId == sessionId && t.EncryptedPayload == token);
-
-                if (dbToken == null)
-                {
-                    ViewBag.Message = "Token not recognized.";
-                    ViewBag.Success = false;
-                    return View("MarkScanResult");
-                }
-
-                if (DateTime.UtcNow > dbToken.ExpiresAt)
-                {
-                    ViewBag.Message = "QR code has expired. Please scan the current one.";
-                    ViewBag.Success = false;
-                    return View("MarkScanResult");
-                }
-
-                var isEnrolled = await _context.Enrollments
-                    .AnyAsync(e => e.CourseId == session.CourseId && e.StudentId == user.Id);
+                user.FaceEncoding = encoding;
+                user.HasRegisteredFace = true;
                 
-                if (!isEnrolled)
-                {
-                    ViewBag.Message = "You are not enrolled in this course.";
-                    ViewBag.Success = false;
-                    return View("MarkScanResult");
-                }
-
-                var existingRecord = await _context.AttendanceRecords
-                    .FirstOrDefaultAsync(a => a.LectureSessionId == sessionId && a.StudentId == user.Id);
-
-                if (existingRecord != null)
-                {
-                    if (existingRecord.Status == AttendanceStatus.Present)
-                    {
-                        ViewBag.Message = "You have already marked attendance for this session.";
-                        ViewBag.Success = true; // It's already marked, so consider it a success
-                        return View("MarkScanResult");
-                    }
-                    else
-                    {
-                        existingRecord.Status = AttendanceStatus.Present;
-                        existingRecord.MarkedBy = MarkedByType.Scan;
-                        existingRecord.MarkedAt = DateTime.UtcNow;
-                    }
-                }
-                else
-                {
-                    var record = new AttendanceRecord
-                    {
-                        LectureSessionId = sessionId,
-                        StudentId = user.Id,
-                        Status = AttendanceStatus.Present,
-                        MarkedAt = DateTime.UtcNow,
-                        MarkedBy = MarkedByType.Scan,
-                        IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    };
-                    _context.AttendanceRecords.Add(record);
-                }
-
-                await _context.SaveChangesAsync();
+                var result = await _userManager.UpdateAsync(user);
                 
-                ViewBag.Message = "Attendance marked successfully!";
-                ViewBag.Success = true;
-                return View("MarkScanResult");
+                if (result.Succeeded)
+                {
+                    return Ok(ApiResponse.Ok("Face registered successfully!"));
+                }
+                
+                return BadRequest(ApiResponse.Error("Error saving user profile."));
             }
             catch (Exception ex)
             {
-                ViewBag.Message = "An error occurred while processing the QR code.";
-                ViewBag.Success = false;
-                return View("MarkScanResult");
+                return BadRequest(ApiResponse.Error(ex.Message));
             }
+        }
+
+        [HttpGet]
+        public IActionResult MarkScan(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Scan");
+            }
+
+            // Redirect to the scanner page to enforce Face Verification
+            return RedirectToAction("Scan", new { prefilledToken = token });
         }
 
         public async Task<IActionResult> Dashboard()

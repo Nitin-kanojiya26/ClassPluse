@@ -1,0 +1,134 @@
+@{
+    ViewData["Title"] = "Register Face";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4 p-md-5 text-center">
+                    <div class="mb-4">
+                        <i class="bi bi-person-bounding-box text-primary display-1"></i>
+                    </div>
+                    <h2 class="fw-bold mb-3">Face Setup Required</h2>
+                    <p class="text-muted mb-4">
+                        Before you can access your dashboard and mark attendance, you need to register your face. 
+                        This ensures secure, automatic verification during classes.
+                    </p>
+
+                    <!-- Video / Camera Area -->
+                    <div class="bg-dark rounded-4 overflow-hidden mb-4 position-relative mx-auto" style="width: 100%; max-width: 320px; aspect-ratio: 1; border: 4px solid #f8f9fa; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <video id="videoElement" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        <canvas id="canvasElement" style="display: none;"></canvas>
+                        
+                        <!-- Overlay overlay -->
+                        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events: none;">
+                            <div style="width: 60%; height: 60%; border: 2px dashed rgba(255,255,255,0.5); border-radius: 50%;"></div>
+                        </div>
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger" style="display:none;"></div>
+                    <div id="successMessage" class="alert alert-success" style="display:none;"></div>
+
+                    <button id="captureBtn" class="btn btn-primary btn-lg rounded-pill w-100 fw-bold shadow-sm">
+                        <i class="bi bi-camera me-2"></i> Capture & Register
+                    </button>
+                    
+                    <button id="loadingBtn" class="btn btn-primary btn-lg rounded-pill w-100 fw-bold shadow-sm" style="display:none;" disabled>
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Processing...
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const video = document.getElementById('videoElement');
+        const canvas = document.getElementById('canvasElement');
+        const captureBtn = document.getElementById('captureBtn');
+        const loadingBtn = document.getElementById('loadingBtn');
+        const errorAlert = document.getElementById('errorMessage');
+        const successAlert = document.getElementById('successMessage');
+
+        // Access webcam
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user" } // front camera
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                showError("Could not access camera. Please check your browser permissions.");
+                captureBtn.disabled = true;
+            }
+        }
+
+        function showError(msg) {
+            errorAlert.textContent = msg;
+            errorAlert.style.display = 'block';
+            successAlert.style.display = 'none';
+        }
+
+        function showSuccess(msg) {
+            successAlert.textContent = msg;
+            successAlert.style.display = 'block';
+            errorAlert.style.display = 'none';
+        }
+
+        captureBtn.addEventListener('click', async () => {
+            // Hide alerts
+            errorAlert.style.display = 'none';
+            successAlert.style.display = 'none';
+            
+            // Switch buttons
+            captureBtn.style.display = 'none';
+            loadingBtn.style.display = 'block';
+
+            // Draw current video frame to canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Get Base64 image
+            const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+            try {
+                const response = await fetch('@Url.Action("RegisterFace", "Student")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ faceImageBase64: imageBase64 })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message + " Redirecting...");
+                    // Stop camera stream
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    
+                    setTimeout(() => {
+                        window.location.href = '@Url.Action("Dashboard", "Student")';
+                    }, 1500);
+                } else {
+                    showError(data.message || "Failed to register face. Please try again.");
+                    captureBtn.style.display = 'block';
+                    loadingBtn.style.display = 'none';
+                }
+            } catch (err) {
+                showError("A network error occurred. Please try again.");
+                captureBtn.style.display = 'block';
+                loadingBtn.style.display = 'none';
+            }
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initCamera);
+    </script>
+}

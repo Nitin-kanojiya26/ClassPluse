@@ -53,9 +53,17 @@ namespace ClassPluse.Controllers
         }
 
         // Courses Management
-        public async Task<IActionResult> Courses()
+        public async Task<IActionResult> Courses(string searchString)
         {
-            var courses = await _context.Courses.Include(c => c.Faculty).ToListAsync();
+            ViewBag.CurrentSearch = searchString;
+            var coursesQuery = _context.Courses.Include(c => c.Faculty).AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                coursesQuery = coursesQuery.Where(c => c.CourseCode.Contains(searchString) || c.CourseName.Contains(searchString) || c.Id.ToString() == searchString);
+            }
+
+            var courses = await coursesQuery.ToListAsync();
             return View(courses);
         }
 
@@ -82,12 +90,23 @@ namespace ClassPluse.Controllers
         }
         
         // Enrollments
-        public async Task<IActionResult> Enrollments()
+        public async Task<IActionResult> Enrollments(string searchString)
         {
-            var enrollments = await _context.Enrollments
+            ViewBag.CurrentSearch = searchString;
+            var enrollmentsQuery = _context.Enrollments
                 .Include(e => e.Course)
                 .Include(e => e.Student)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                enrollmentsQuery = enrollmentsQuery.Where(e => 
+                    e.StudentId.Contains(searchString) || 
+                    (e.Student != null && e.Student.RollNumber != null && e.Student.RollNumber.Contains(searchString)) ||
+                    (e.Student != null && e.Student.FullName.Contains(searchString)));
+            }
+
+            var enrollments = await enrollmentsQuery.ToListAsync();
             return View(enrollments);
         }
 
@@ -250,7 +269,33 @@ namespace ClassPluse.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
-                // Note: Consider deleting related records (like Enrollments) if foreign keys do not cascade delete
+                // Delete related records to handle foreign key constraints
+                
+                // Delete student enrollments
+                var studentEnrollments = _context.Enrollments.Where(e => e.StudentId == id);
+                _context.Enrollments.RemoveRange(studentEnrollments);
+
+                // Delete student attendance records
+                var attendanceRecords = _context.AttendanceRecords.Where(a => a.StudentId == id);
+                _context.AttendanceRecords.RemoveRange(attendanceRecords);
+
+                // Handle Faculty deletion (Courses, LectureSessions, and their dependencies)
+                var courses = await _context.Courses.Where(c => c.FacultyId == id).ToListAsync();
+                foreach(var course in courses)
+                {
+                    var courseEnrollments = _context.Enrollments.Where(e => e.CourseId == course.Id);
+                    _context.Enrollments.RemoveRange(courseEnrollments);
+
+                    var courseSessions = _context.LectureSessions.Where(ls => ls.CourseId == course.Id);
+                    _context.LectureSessions.RemoveRange(courseSessions);
+                }
+                _context.Courses.RemoveRange(courses);
+
+                var facultySessions = _context.LectureSessions.Where(ls => ls.FacultyId == id);
+                _context.LectureSessions.RemoveRange(facultySessions);
+
+                await _context.SaveChangesAsync();
+
                 await _userManager.DeleteAsync(user);
             }
             return RedirectToAction(nameof(Users));

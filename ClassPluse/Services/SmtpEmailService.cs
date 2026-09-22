@@ -38,10 +38,10 @@ namespace ClassPluse.Services
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(senderEmail, senderName),
+                    From = new MailAddress(senderEmail ?? "no-reply@classpluse.com", senderName),
                     Subject = subject,
                     Body = body,
-                    IsBodyHtml = false,
+                    IsBodyHtml = true,
                 };
                 mailMessage.To.Add(to);
 

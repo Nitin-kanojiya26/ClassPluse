@@ -1,8 +1,7 @@
 namespace ClassPluse.Models
 {
-    public class MarkAttendanceRequest
+    public class RegisterFaceRequest
     {
-        public string Token { get; set; } = string.Empty;
         public string FaceImageBase64 { get; set; } = string.Empty;
     }
 }
