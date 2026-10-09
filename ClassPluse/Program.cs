@@ -24,7 +24,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddClassPluseServices();
-
+builder.Services.AddHostedService<ClassPluse.Services.AttendanceCleanupService>();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

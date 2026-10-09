@@ -12,7 +12,8 @@ namespace ClassPluse.Models
     public enum MarkedByType
     {
         Scan,
-        ManualFaculty
+        ManualFaculty,
+        System
     }
 
     public class AttendanceRecord
