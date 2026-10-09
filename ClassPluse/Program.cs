@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -24,12 +23,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
-// Register application specific services
 builder.Services.AddClassPluseServices();
 
 var app = builder.Build();
 
-// Seed Database
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -39,10 +36,8 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         
-        // Ensure db is created
         context.Database.Migrate();
 
-        // Create Roles
         string[] roleNames = { "Admin", "Faculty", "Student" };
         foreach (var roleName in roleNames)
         {
@@ -53,7 +48,6 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-        // Create Default Admin User
         var adminUser = await userManager.FindByEmailAsync("admin@classpluse.com");
         if (adminUser == null)
         {
@@ -78,14 +72,12 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-// Add this BEFORE app.UseRouting() or app.UseEndpoints()
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto

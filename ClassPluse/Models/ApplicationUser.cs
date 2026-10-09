@@ -3,9 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ClassPluse.Models
 {
-    /// <summary>
-    /// Represents a user in the application (Admin, Faculty, Student).
-    /// </summary>
     public class ApplicationUser : IdentityUser
     {
         [Required]
@@ -25,10 +22,6 @@ namespace ClassPluse.Models
         // Face Recognition Properties
         public bool HasRegisteredFace { get; set; } = false;
 
-        /// <summary>
-        /// Stores the 128-d vector encoding or Base64 encoding of the user's face.
-        /// Stored as a string (e.g., JSON array of floats) for easy DB saving.
-        /// </summary>
         public string? FaceEncoding { get; set; }
     }
 }

@@ -269,17 +269,13 @@ namespace ClassPluse.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
-                // Delete related records to handle foreign key constraints
-                
-                // Delete student enrollments
+    
                 var studentEnrollments = _context.Enrollments.Where(e => e.StudentId == id);
                 _context.Enrollments.RemoveRange(studentEnrollments);
 
-                // Delete student attendance records
                 var attendanceRecords = _context.AttendanceRecords.Where(a => a.StudentId == id);
                 _context.AttendanceRecords.RemoveRange(attendanceRecords);
 
-                // Handle Faculty deletion (Courses, LectureSessions, and their dependencies)
                 var courses = await _context.Courses.Where(c => c.FacultyId == id).ToListAsync();
                 foreach(var course in courses)
                 {
