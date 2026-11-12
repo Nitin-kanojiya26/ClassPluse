@@ -60,7 +60,6 @@ namespace ClassPluse.Controllers
 
             try
             {
-                // Remove data:image/jpeg;base64, prefix if present
                 var base64Data = request.FaceImageBase64.Contains(",") 
                     ? request.FaceImageBase64.Split(',')[1] 
                     : request.FaceImageBase64;

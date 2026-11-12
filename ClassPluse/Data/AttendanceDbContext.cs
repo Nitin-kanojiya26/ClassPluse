@@ -21,12 +21,10 @@ namespace ClassPluse.Data
         {
             base.OnModelCreating(builder);
 
-            // Configure unique constraint on AttendanceRecord
             builder.Entity<AttendanceRecord>()
                 .HasIndex(a => new { a.LectureSessionId, a.StudentId })
                 .IsUnique();
 
-            // Configure relationships
             builder.Entity<Enrollment>()
                 .HasOne(e => e.Course)
                 .WithMany(c => c.Enrollments)

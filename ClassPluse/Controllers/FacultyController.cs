@@ -128,7 +128,6 @@ namespace ClassPluse.Controllers
             session.IsActive = false;
             session.EndTime = DateTime.UtcNow;
             
-            // Invalidate existing tokens
             var activeTokens = await _context.QrTokens
                 .Where(t => t.LectureSessionId == sessionId && t.ExpiresAt > DateTime.UtcNow)
                 .ToListAsync();
